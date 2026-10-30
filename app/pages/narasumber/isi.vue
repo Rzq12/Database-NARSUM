@@ -2,7 +2,7 @@
 definePageMeta({ middleware: ['auth', 'role'], roles: ['narasumber'] })
 useHead({ title: 'Isi data · Database Narasumber Kegiatan LAN' })
 const { data, status, error, refresh } = await useFetch('/api/saya')
-watch(error, async (e) => { if (e) await tanganiSesiHabis(bacaGalat(e)) }, { immediate: true })
+useSesiHabis(error)
 
 type Isian = 'teks' | 'angka' | 'tanggal' | 'telepon' | 'pilihan' | 'paragraf'
 const ISIAN: Record<KolomProfil, { jenis: Isian, opsi?: readonly string[], petunjuk?: string, panjang?: number, autocomplete?: string }> = {
@@ -60,7 +60,7 @@ const batasLahir = (() => {
 const kurang = computed(() => {
   const nilai = Object.fromEntries(Object.entries(form).map(([k, v]) => [k, v.trim() ? v : null])) as Partial<Profil>
   const daftar = Object.keys(cekKelengkapan(nilai, tipe.value)).map(k => ({ id: k, label: LABEL_KOLOM[k as KolomProfil] }))
-  for (const jenis of ['npwp', 'buku_tabungan', 'cv'] as const) {
+  for (const jenis of JENIS_DOKUMEN) {
     if (!data.value?.dokumen.some(d => d.jenis === jenis)) daftar.push({ id: `dokumen-${jenis}`, label: `File ${LABEL_DOKUMEN[jenis]}` })
   }
   return daftar
@@ -194,7 +194,7 @@ async function simpan(final: boolean) {
               <p class="mt-2 teks-kecil">File langsung tersimpan saat diunggah. Tipe file diperiksa dari isinya.</p>
               <div class="mt-2">
                 <UnggahDokumen
-                  v-for="jenis in (['npwp', 'buku_tabungan', 'cv'] as const)"
+                  v-for="jenis in JENIS_DOKUMEN"
                   :key="jenis"
                   :jenis="jenis"
                   :ada="data.dokumen.find(d => d.jenis === jenis)"

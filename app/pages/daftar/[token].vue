@@ -39,12 +39,12 @@ async function daftar() {
   }
   mengirim.value = true
   try {
-    await $fetch('/api/auth/daftar', {
+    const { emailTerkirim } = await $fetch<{ emailTerkirim: boolean }>('/api/auth/daftar' as string, {
       method: 'POST',
       body: { token, tipe: form.tipe, email: form.email, no_hp: form.no_hp, password: form.password, setuju: form.setuju },
     })
     await muatSesi()
-    await navigateTo('/verifikasi?baru=1')
+    await navigateTo(emailTerkirim ? '/verifikasi?baru=1' : '/verifikasi?baru=1&gagal_kirim=1')
   }
   catch (e) {
     const g = bacaGalat(e)

@@ -18,6 +18,19 @@ export async function kirimEmail(ke: string, subjek: string, teks: string) {
   await transport.sendMail({ from: c.smtpFrom, to: ke, subject: subjek, text: teks })
 }
 
+// Dipakai setelah data tersimpan: gagal kirim email tidak boleh membuat aksi yang sudah berhasil
+// terlihat gagal. Kegagalan dicatat ke log (tanpa isi email, yang bisa memuat token) dan dilaporkan ke pemanggil.
+export async function kirimEmailAman(ke: string, subjek: string, teks: string): Promise<boolean> {
+  try {
+    await kirimEmail(ke, subjek, teks)
+    return true
+  }
+  catch (e) {
+    console.error(`Gagal mengirim email "${subjek}":`, (e as Error).message)
+    return false
+  }
+}
+
 export function urlAplikasi(path: string) {
   return new URL(path, useRuntimeConfig().public.urlAplikasi).toString()
 }

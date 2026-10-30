@@ -5,7 +5,7 @@ const { user } = useUserSession()
 
 const { data: pengguna, status, error, refresh } = await useFetch('/api/pengguna')
 const { data: unit, refresh: muatUnit } = await useFetch('/api/unit')
-watch(error, async (e) => { if (e) await tanganiSesiHabis(bacaGalat(e)) }, { immediate: true })
+useSesiHabis(error)
 
 const PILIHAN_ROLE = ['admin_unit', 'keuangan', 'inspektorat', 'super_admin'] as const
 
@@ -21,8 +21,10 @@ async function tambah() {
   suksesBaru.value = ''
   membuat.value = true
   try {
-    await $fetch('/api/pengguna', { method: 'POST', body: baru })
-    suksesBaru.value = `Akun ${baru.email} dibuat. Link untuk membuat password dikirim ke email tersebut.`
+    const { emailTerkirim } = await $fetch<{ emailTerkirim: boolean }>('/api/pengguna' as string, { method: 'POST', body: baru })
+    suksesBaru.value = emailTerkirim
+      ? `Akun ${baru.email} dibuat. Link untuk membuat password dikirim ke email tersebut.`
+      : `Akun ${baru.email} dibuat, tetapi email link password gagal dikirim. Minta pemilik akun memakai menu "Lupa password" di halaman masuk.`
     Object.assign(baru, { nama: '', email: '', unit_ids: [] })
     await refresh()
   }
@@ -38,7 +40,7 @@ async function tambah() {
 }
 
 // Ubah akun
-const dialogUbah = ref<{ buka: () => void, tutup: () => void }>()
+const dialogUbah = useTemplateRef('dialog-ubah')
 const ubah = reactive({ id: 0, nama: '', role: 'admin_unit' as typeof PILIHAN_ROLE[number], unit_ids: [] as number[], galat: {} as Record<string, string>, pesan: '', sedang: false })
 function bukaUbah(p: NonNullable<typeof pengguna.value>[number]) {
   Object.assign(ubah, { id: p.id, nama: p.nama ?? '', role: p.role, unit_ids: p.units.map(u => u.id), galat: {}, pesan: '' })
@@ -208,7 +210,7 @@ async function simpanUnit() {
       </section>
     </div>
 
-    <Dialog ref="dialogUbah" judul="Ubah akun staf">
+    <Dialog ref="dialog-ubah" judul="Ubah akun staf">
       <form class="space-y-4" novalidate @submit.prevent="simpanUbah">
         <Pesan v-if="ubah.pesan" jenis="galat">{{ ubah.pesan }}</Pesan>
         <KolomIsian id="ubah-nama" label="Nama" :galat="ubah.galat.nama">

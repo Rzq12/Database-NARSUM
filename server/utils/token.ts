@@ -21,8 +21,8 @@ export async function pakaiTokenAkun(token: string, jenis: 'verifikasi' | 'reset
   return data
 }
 
-export async function kirimVerifikasi(userId: number, email: string) {
+export async function kirimVerifikasi(userId: number, email: string): Promise<boolean> {
   const token = await buatTokenAkun(userId, 'verifikasi', 24 * 60)
   const { subjek, teks } = templatEmail.verifikasi(urlAplikasi(`/verifikasi?token=${token}`))
-  await kirimEmail(email, subjek, teks)
+  return kirimEmailAman(email, subjek, teks)
 }

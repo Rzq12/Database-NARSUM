@@ -17,7 +17,7 @@ export default defineEventHandler(async (event) => {
   })
   const token = await buatTokenAkun(baru.id, 'reset', 24 * 60)
   const { subjek, teks } = templatEmail.akunStaf(urlAplikasi(`/reset-password?token=${token}`), LABEL_ROLE[body.role])
-  await kirimEmail(baru.email, subjek, teks)
+  const emailTerkirim = await kirimEmailAman(baru.email, subjek, teks)
   await catatAudit(event, { pelaku: akun, aksi: 'buat_akun', objek: 'user', objekId: baru.id, keterangan: `role ${body.role}` })
-  return { id: baru.id }
+  return { id: baru.id, emailTerkirim }
 })

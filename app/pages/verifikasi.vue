@@ -67,6 +67,9 @@ async function kirimUlang() {
 
     <template v-else>
       <h1 class="text-2xl">Periksa email Anda</h1>
+      <Pesan v-if="route.query.gagal_kirim && kirim !== 'terkirim'" jenis="galat" class="mt-4">
+        Akun Anda sudah dibuat, tetapi email verifikasi gagal dikirim. Tekan "Kirim ulang link" di bawah.
+      </Pesan>
       <p class="mt-3 text-arang">
         Kami mengirim link verifikasi ke <strong class="font-semibold text-tinta">{{ user?.email ?? 'email Anda' }}</strong>.
         Buka link itu untuk mulai mengisi data. Link berlaku 24 jam.

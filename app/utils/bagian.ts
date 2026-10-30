@@ -10,6 +10,14 @@ export function kolomTampil(kolom: KolomProfil[], tipe: 'asn' | 'non_asn') {
   return tipe === 'asn' ? kolom : kolom.filter(k => !KOLOM_ASN.includes(k))
 }
 
+export function barisDokumen(dokumen: { jenis: JenisDokumen, nama_asli: string }[]) {
+  return JENIS_DOKUMEN.map(jenis => ({
+    kunci: jenis,
+    label: LABEL_DOKUMEN[jenis],
+    nilai: dokumen.find(d => d.jenis === jenis)?.nama_asli ?? null,
+  }))
+}
+
 // Baris lembar data. Tempat dan tanggal lahir digabung seperti formulir kertas.
 export function barisLembar(profil: Profil, tipe: 'asn' | 'non_asn', email: string) {
   return BAGIAN.map((b) => {

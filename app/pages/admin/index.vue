@@ -30,7 +30,7 @@ watch(filter, () => {
 
 const { data, status, error, refresh } = await useFetch('/api/narasumber', { query: filter })
 const { data: unit } = await useFetch('/api/unit')
-watch(error, async (e) => { if (e) await tanganiSesiHabis(bacaGalat(e)) }, { immediate: true })
+useSesiHabis(error)
 
 function cari() {
   filter.q = kataCari.value.trim()
@@ -74,7 +74,7 @@ function pilihSemua(e: Event) {
     : dipilih.value.filter(id => !ids.includes(id))
 }
 
-const dialogEkspor = ref<{ buka: () => void, tutup: () => void }>()
+const dialogEkspor = useTemplateRef('dialog-ekspor')
 const KOLOM_EKSPOR = [
   ...(Object.keys(LABEL_KOLOM) as KolomProfil[]).map(k => ({ k: k as string, label: LABEL_KOLOM[k], sensitif: KOLOM_SENSITIF.includes(k) })),
   { k: 'email', label: 'Email', sensitif: false },
@@ -251,7 +251,7 @@ async function unduhEkspor() {
       </template>
     </div>
 
-    <Dialog ref="dialogEkspor" judul="Ekspor data narasumber">
+    <Dialog ref="dialog-ekspor" judul="Ekspor data narasumber">
       <form class="space-y-4" @submit.prevent="unduhEkspor">
         <p class="text-sm text-arang">{{ dipilih.length }} narasumber terpilih. Setiap ekspor dicatat di log audit beserta jumlah baris.</p>
         <fieldset>

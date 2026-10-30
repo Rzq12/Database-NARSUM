@@ -12,7 +12,7 @@ export default defineEventHandler(async (event) => {
   if (akun && akun.status === 'aktif') {
     const token = await buatTokenAkun(akun.id, 'reset', 60)
     const { subjek, teks } = templatEmail.reset(urlAplikasi(`/reset-password?token=${token}`))
-    kirimEmail(akun.email, subjek, teks).catch(e => console.error('Gagal mengirim email reset password:', (e as Error).message))
+    void kirimEmailAman(akun.email, subjek, teks)
   }
   return { ok: true }
 })

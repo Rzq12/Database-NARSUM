@@ -5,7 +5,7 @@ const { user } = useUserSession()
 
 const { data: daftar, status, error, refresh } = await useFetch('/api/undangan')
 const { data: semuaUnit } = await useFetch('/api/unit')
-watch(error, async (e) => { if (e) await tanganiSesiHabis(bacaGalat(e)) }, { immediate: true })
+useSesiHabis(error)
 
 const unitPilihan = computed(() => (semuaUnit.value ?? []).filter(u => user.value?.role === 'super_admin' || u.milik_saya))
 const form = reactive({ unit_id: '', email_tujuan: '', masa_hari: 14, kirim_email: true })
@@ -16,7 +16,7 @@ watchEffect(() => {
 const galat = ref<Record<string, string>>({})
 const pesan = ref('')
 const duplikat = ref<number | null>(null)
-const hasil = ref<{ link: string, terkirim: boolean } | null>(null)
+const hasil = ref<{ link: string, terkirim: boolean, gagalKirim: boolean } | null>(null)
 const membuat = ref(false)
 const tersalin = ref(false)
 
@@ -28,7 +28,7 @@ async function buat() {
   tersalin.value = false
   membuat.value = true
   try {
-    hasil.value = await $fetch<{ link: string, terkirim: boolean }>('/api/undangan' as string, {
+    hasil.value = await $fetch<{ link: string, terkirim: boolean, gagalKirim: boolean }>('/api/undangan' as string, {
       method: 'POST',
       body: { ...form, kirim_email: form.kirim_email && !!form.email_tujuan },
     })
@@ -60,7 +60,7 @@ async function salin() {
 
 const LABEL_STATUS_UNDANGAN = { belum_dipakai: 'Belum dipakai', dipakai: 'Sudah dipakai', kedaluwarsa: 'Kedaluwarsa', dicabut: 'Dicabut' } as const
 
-const dialogCabut = ref<{ buka: () => void, tutup: () => void }>()
+const dialogCabut = useTemplateRef('dialog-cabut')
 const target = ref<{ id: number, email_tujuan: string | null } | null>(null)
 const cabut = reactive({ sedang: false, pesan: '' })
 function mintaCabut(u: { id: number, email_tujuan: string | null }) {
@@ -134,6 +134,7 @@ async function cabutUndangan() {
 
         <div v-if="hasil" class="mt-5 rounded-kartu border border-garis bg-permukaan p-4" role="status">
           <p class="font-medium">Link undangan dibuat{{ hasil.terkirim ? ' dan dikirim ke email narasumber' : '' }}.</p>
+          <p v-if="hasil.gagalKirim" class="mt-1 text-sm font-medium text-galat">Email gagal dikirim. Salin link di bawah dan kirim sendiri ke narasumber.</p>
           <p class="mt-1 text-sm text-arang">Link hanya ditampilkan sekali. Salin sekarang jika ingin mengirimnya sendiri.</p>
           <label for="link-baru" class="sr-only">Link undangan</label>
           <input id="link-baru" class="isian mt-3 text-sm" :value="hasil.link" readonly @focus="($event.target as HTMLInputElement).select()">
@@ -170,7 +171,7 @@ async function cabutUndangan() {
       </section>
     </div>
 
-    <Dialog ref="dialogCabut" judul="Cabut undangan ini?">
+    <Dialog ref="dialog-cabut" judul="Cabut undangan ini?">
       <p class="text-arang">Link untuk {{ target?.email_tujuan ?? 'undangan tanpa email tujuan' }} tidak akan bisa dipakai lagi.</p>
       <Pesan v-if="cabut.pesan" jenis="galat" class="mt-3">{{ cabut.pesan }}</Pesan>
       <div class="mt-5 flex flex-wrap gap-3">

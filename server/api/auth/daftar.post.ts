@@ -42,12 +42,12 @@ export default defineEventHandler(async (event) => {
     })
   })
 
-  await kirimVerifikasi(akun.id, akun.email)
+  const emailTerkirim = await kirimVerifikasi(akun.id, akun.email)
   await catatAudit(event, { pelaku: akun, aksi: 'daftar', objek: 'user', objekId: akun.id })
   await setUserSession(event, {
     user: { id: akun.id, role: 'narasumber', nama: akun.email, email: akun.email, tipe: akun.tipe },
     aktifTerakhir: Date.now(),
     versiSesi: akun.versi_sesi,
   })
-  return { ok: true }
+  return { ok: true, emailTerkirim }
 })

@@ -10,6 +10,8 @@ export default defineEventHandler(async (event) => {
   if (jumlah >= 4) {
     throw createError({ statusCode: 429, message: 'Batas kirim ulang 3 kali per jam sudah tercapai. Coba lagi nanti.' })
   }
-  await kirimVerifikasi(akun.id, akun.email)
+  if (!(await kirimVerifikasi(akun.id, akun.email))) {
+    throw createError({ statusCode: 502, message: 'Email verifikasi gagal dikirim. Coba lagi beberapa saat lagi.' })
+  }
   return { ok: true, sudahTerverifikasi: false }
 })

@@ -3,10 +3,11 @@ definePageMeta({ middleware: ['auth', 'role'], roles: ['admin_unit', 'keuangan',
 const route = useRoute()
 const id = Number(route.params.id)
 const { data, status, error, refresh } = await useFetch(`/api/narasumber/${id}`)
-watch(error, async (e) => { if (e) await tanganiSesiHabis(bacaGalat(e)) }, { immediate: true })
+useSesiHabis(error)
 useHead(() => ({ title: `${data.value?.profil.nama_lengkap ?? 'Narasumber'} · Database Narasumber Kegiatan LAN` }))
 
 const lembar = computed(() => (data.value ? barisLembar(data.value.profil, data.value.tipe, data.value.email) : []))
+const ukuranDokumen = (jenis: JenisDokumen) => data.value?.dokumen.find(d => d.jenis === jenis)?.ukuran ?? 0
 
 // FR-19: data sensitif tersamar sampai staf menekan "Tampilkan". Aksi itu tercatat di server.
 const sensitif = ref<{ nik: string | null, npwp: string | null, no_rekening: string | null } | null>(null)
@@ -27,13 +28,15 @@ async function bukaSensitif() {
   }
 }
 
-const review = reactive({ mode: '' as '' | 'perbaikan', catatan: '', sedang: false, pesan: '', galat: '' })
+const review = reactive({ mode: '' as '' | 'perbaikan', catatan: '', sedang: false, pesan: '', galat: '', emailGagal: false })
 async function kirimReview(hasil: 'disetujui' | 'perlu_perbaikan') {
   review.pesan = ''
   review.galat = ''
+  review.emailGagal = false
   review.sedang = true
   try {
-    await $fetch(`/api/narasumber/${id}/review`, { method: 'POST', body: { hasil, catatan: review.catatan } })
+    const { emailTerkirim } = await $fetch<{ emailTerkirim: boolean }>(`/api/narasumber/${id}/review` as string, { method: 'POST', body: { hasil, catatan: review.catatan } })
+    review.emailGagal = !emailTerkirim
     Object.assign(review, { mode: '', catatan: '' })
     await refresh()
   }
@@ -48,7 +51,7 @@ async function kirimReview(hasil: 'disetujui' | 'perlu_perbaikan') {
   }
 }
 
-const dialogHapus = ref<{ buka: () => void, tutup: () => void }>()
+const dialogHapus = useTemplateRef('dialog-hapus')
 const hapus = reactive({ sedang: false, pesan: '' })
 async function hapusData() {
   hapus.sedang = true
@@ -110,25 +113,19 @@ async function hapusData() {
             </template>
           </LembarData>
 
-          <section class="kartu overflow-hidden">
-            <h2 class="border-b border-garis bg-permukaan px-4 py-3 text-base">Dokumen</h2>
-            <ul>
-              <li v-for="jenis in (['npwp', 'buku_tabungan', 'cv'] as const)" :key="jenis" class="grid gap-x-3 border-b border-garis px-4 py-3 last:border-b-0 sm:grid-cols-[14rem_1rem_1fr]">
-                <span class="text-sm text-sekunder sm:text-base sm:text-arang">{{ LABEL_DOKUMEN[jenis] }}</span>
-                <span class="hidden text-sekunder sm:block" aria-hidden="true">:</span>
-                <span class="min-w-0 break-words">
-                  <template v-if="data.dokumen.find(d => d.jenis === jenis)">
-                    <a v-if="data.boleh.unduh" :href="`/api/narasumber/${id}/dokumen/${jenis}`" target="_blank" rel="noopener" class="tautan">
-                      {{ data.dokumen.find(d => d.jenis === jenis)!.nama_asli }}
-                    </a>
-                    <span class="text-sm text-sekunder"> · {{ formatUkuran(data.dokumen.find(d => d.jenis === jenis)!.ukuran) }}</span>
-                  </template>
-                  <span v-else class="text-sekunder">Belum diunggah</span>
-                </span>
-              </li>
-            </ul>
-            <p v-if="data.boleh.unduh" class="border-t border-garis px-4 py-2 text-sm text-sekunder">Setiap dokumen yang dibuka tercatat di log audit.</p>
-          </section>
+          <LembarData judul="Dokumen" :baris="barisDokumen(data.dokumen)">
+            <template v-for="jenis in JENIS_DOKUMEN" :key="jenis" #[`nilai-${jenis}`]="{ nilai }">
+              <template v-if="nilai">
+                <a v-if="data.boleh.unduh" :href="`/api/narasumber/${id}/dokumen/${jenis}`" target="_blank" rel="noopener" class="tautan">{{ nilai }}</a>
+                <span v-else>{{ nilai }}</span>
+                <span class="text-sm text-sekunder"> · {{ formatUkuran(ukuranDokumen(jenis)) }}</span>
+              </template>
+              <span v-else class="text-sekunder">Belum diunggah</span>
+            </template>
+            <template v-if="data.boleh.unduh" #kaki>
+              <p class="border-t border-garis px-4 py-2 text-sm text-sekunder">Setiap dokumen yang dibuka tercatat di log audit.</p>
+            </template>
+          </LembarData>
 
           <p v-if="data.pernyataan_benar_at" class="teks-kecil">
             Narasumber menyatakan data ini benar pada {{ formatWaktu(data.pernyataan_benar_at) }}.
@@ -138,6 +135,9 @@ async function hapusData() {
         <aside class="space-y-6">
           <section class="kartu p-5" aria-labelledby="judul-review">
             <h2 id="judul-review" class="text-lg">Review</h2>
+            <Pesan v-if="review.emailGagal" jenis="galat" class="mt-3">
+              Review tersimpan, tetapi email pemberitahuan ke narasumber gagal dikirim. Kabari narasumber secara langsung.
+            </Pesan>
 
             <template v-if="data.boleh.review">
               <p class="mt-2 text-sm text-arang">Periksa data dan dokumen, lalu setujui atau minta perbaikan. Narasumber menerima email hasilnya.</p>
@@ -186,7 +186,7 @@ async function hapusData() {
         </aside>
       </div>
 
-      <Dialog ref="dialogHapus" judul="Hapus data ini secara permanen?">
+      <Dialog ref="dialog-hapus" judul="Hapus data ini secara permanen?">
         <p class="text-arang">
           Data {{ data.profil.nama_lengkap ?? data.email }}, ketiga dokumennya, dan akunnya akan dihapus dan tidak bisa dikembalikan.
           Log audit mencatat penghapusan tanpa menyimpan isi data.

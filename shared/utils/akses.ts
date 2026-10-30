@@ -38,6 +38,8 @@ export const LABEL_STATUS: Record<StatusReview, string> = {
   perlu_perbaikan: 'Perlu perbaikan',
 }
 
+export const JENIS_DOKUMEN: readonly JenisDokumen[] = ['npwp', 'buku_tabungan', 'cv']
+
 export const LABEL_DOKUMEN: Record<JenisDokumen, string> = {
   npwp: 'NPWP',
   buku_tabungan: 'Foto buku tabungan',

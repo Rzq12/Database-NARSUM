@@ -17,6 +17,6 @@ export default defineEventHandler(async (event) => {
   await catatAudit(event, { pelaku: akun, aksi: 'review', objek: 'narasumber', objekId: ns.id, keterangan: hasil })
 
   const { subjek, teks } = hasil === 'disetujui' ? templatEmail.disetujui() : templatEmail.perluPerbaikan(catatan!)
-  await kirimEmail(ns.user.email, subjek, teks)
-  return { status_review: hasil }
+  const emailTerkirim = await kirimEmailAman(ns.user.email, subjek, teks)
+  return { status_review: hasil, emailTerkirim }
 })

@@ -39,10 +39,12 @@ export default defineEventHandler(async (event) => {
   })
   const link = urlAplikasi(`/daftar/${token}`)
 
-  if (body.kirim_email && body.email_tujuan) {
+  const mintaKirim = !!(body.kirim_email && body.email_tujuan)
+  let terkirim = false
+  if (mintaKirim) {
     const { subjek, teks } = templatEmail.undangan(link, unit.nama, kedaluwarsa)
-    await kirimEmail(body.email_tujuan, subjek, teks)
-    await prisma.undangan.update({ where: { id: undangan.id }, data: { dikirim_at: new Date() } })
+    terkirim = await kirimEmailAman(body.email_tujuan!, subjek, teks)
+    if (terkirim) await prisma.undangan.update({ where: { id: undangan.id }, data: { dikirim_at: new Date() } })
   }
 
   await catatAudit(event, {
@@ -50,7 +52,8 @@ export default defineEventHandler(async (event) => {
     aksi: 'buat_undangan',
     objek: 'undangan',
     objekId: undangan.id,
-    keterangan: body.kirim_email && body.email_tujuan ? 'dikirim lewat email' : undefined,
+    keterangan: terkirim ? 'dikirim lewat email' : mintaKirim ? 'email gagal dikirim' : undefined,
   })
-  return { id: undangan.id, link, terkirim: !!(body.kirim_email && body.email_tujuan) }
+  // Link tetap dikembalikan walau email gagal, karena token hanya disimpan sebagai hash.
+  return { id: undangan.id, link, terkirim, gagalKirim: mintaKirim && !terkirim }
 })

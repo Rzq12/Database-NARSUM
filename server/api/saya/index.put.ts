@@ -29,7 +29,7 @@ export default defineEventHandler(async (event) => {
   if (final) {
     const galat = cekKelengkapan(profil, tipe)
     const ada = new Set(ns.dokumen.map(d => d.jenis))
-    for (const jenis of SEMUA_JENIS_DOKUMEN) {
+    for (const jenis of JENIS_DOKUMEN) {
       if (!ada.has(jenis)) galat[`dokumen.${jenis}`] = `Unggah ${LABEL_DOKUMEN[jenis]}`
     }
     if (!pernyataan) galat.pernyataan = 'Centang pernyataan kebenaran data untuk menyimpan final'
@@ -70,7 +70,7 @@ export default defineEventHandler(async (event) => {
         select: { email: true },
       })
       const { subjek, teks } = templatEmail.dataMasuk(profil.nama_lengkap ?? akun.email, ns.id)
-      for (const a of admin) await kirimEmail(a.email, subjek, teks)
+      await Promise.all(admin.map(a => kirimEmailAman(a.email, subjek, teks)))
     }
   }
 

@@ -4,7 +4,7 @@ useHead({ title: 'Data saya · Database Narasumber Kegiatan LAN' })
 const route = useRoute()
 const { data, status, error, refresh } = await useFetch('/api/saya')
 
-watch(error, async (e) => { if (e) await tanganiSesiHabis(bacaGalat(e)) }, { immediate: true })
+useSesiHabis(error)
 
 const kirimUlang = ref<'diam' | 'mengirim' | 'terkirim'>('diam')
 const pesanKirim = ref('')
@@ -81,21 +81,12 @@ const lembar = computed(() => (data.value ? barisLembar(data.value.profil, data.
       <div v-else class="mt-8 space-y-6">
         <LembarData v-for="b in lembar" :key="b.id" :judul="b.judul" :baris="b.baris" />
 
-        <section class="kartu overflow-hidden">
-          <h2 class="border-b border-garis bg-permukaan px-4 py-3 text-base">Dokumen</h2>
-          <ul>
-            <li v-for="jenis in (['npwp', 'buku_tabungan', 'cv'] as const)" :key="jenis" class="grid gap-x-3 border-b border-garis px-4 py-3 last:border-b-0 sm:grid-cols-[14rem_1rem_1fr]">
-              <span class="text-sm text-sekunder sm:text-base sm:text-arang">{{ LABEL_DOKUMEN[jenis] }}</span>
-              <span class="hidden text-sekunder sm:block" aria-hidden="true">:</span>
-              <span class="min-w-0 break-words">
-                <template v-if="data.dokumen.find(d => d.jenis === jenis)">
-                  <a :href="`/api/saya/dokumen/${jenis}`" target="_blank" rel="noopener" class="tautan">{{ data.dokumen.find(d => d.jenis === jenis)!.nama_asli }}</a>
-                </template>
-                <span v-else class="text-sekunder">Belum diunggah</span>
-              </span>
-            </li>
-          </ul>
-        </section>
+        <LembarData judul="Dokumen" :baris="barisDokumen(data.dokumen)">
+          <template v-for="jenis in JENIS_DOKUMEN" :key="jenis" #[`nilai-${jenis}`]="{ nilai }">
+            <a v-if="nilai" :href="`/api/saya/dokumen/${jenis}`" target="_blank" rel="noopener" class="tautan">{{ nilai }}</a>
+            <span v-else class="text-sekunder">Belum diunggah</span>
+          </template>
+        </LembarData>
 
         <p v-if="data.pernyataan_benar_at" class="teks-kecil">
           Anda menyatakan data ini benar pada {{ formatWaktu(data.pernyataan_benar_at) }}.

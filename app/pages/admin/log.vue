@@ -5,7 +5,7 @@ useHead({ title: 'Log audit · Database Narasumber Kegiatan LAN' })
 const filter = reactive({ dari: '', sampai: '', pelaku: '', aksi: '', halaman: 1 })
 const isian = reactive({ dari: '', sampai: '', pelaku: '', aksi: '' })
 const { data, status, error, refresh } = await useFetch('/api/audit', { query: filter })
-watch(error, async (e) => { if (e) await tanganiSesiHabis(bacaGalat(e)) }, { immediate: true })
+useSesiHabis(error)
 
 function terapkan() {
   Object.assign(filter, isian, { halaman: 1 })

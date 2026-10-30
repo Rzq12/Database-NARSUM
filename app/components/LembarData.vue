@@ -25,5 +25,6 @@ defineProps<{
         </dd>
       </div>
     </dl>
+    <slot name="kaki" />
   </section>
 </template>
