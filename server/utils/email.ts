@@ -9,10 +9,13 @@ export async function kirimEmail(ke: string, subjek: string, teks: string) {
     console.info(`\n[EMAIL] Ke: ${ke}\nSubjek: ${subjek}\n\n${teks}\n`)
     return
   }
+  // Nuxt mengubah NUXT_SMTP_PORT="465" menjadi angka, jadi bandingkan sebagai angka.
+  // Port 465 memakai TLS sejak awal; port lain (587) memakai STARTTLS.
+  const port = Number(c.smtpPort)
   const transport = nodemailer.createTransport({
     host: c.smtpHost,
-    port: Number(c.smtpPort),
-    secure: c.smtpPort === '465',
+    port,
+    secure: port === 465,
     auth: c.smtpUser ? { user: c.smtpUser, pass: c.smtpPass } : undefined,
   })
   await transport.sendMail({ from: c.smtpFrom, to: ke, subject: subjek, text: teks })
