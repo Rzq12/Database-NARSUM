@@ -19,7 +19,7 @@ Aplikasi web tempat narasumber mengisi dan memperbarui data diri, NPWP, buku tab
 - Tes: Vitest dengan `@nuxt/test-utils` untuk logika, Playwright untuk alur utama
 
 ## Perintah
-
+ 
 ```
 npm install
 npm run dev
