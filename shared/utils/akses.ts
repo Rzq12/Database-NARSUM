@@ -47,6 +47,26 @@ export const LABEL_DOKUMEN: Record<JenisDokumen, string> = {
   cv: 'Daftar riwayat hidup (CV)',
 }
 
+export type PeranKegiatan = 'narasumber' | 'penguji' | 'penceramah' | 'pembicara' | 'lainnya'
+export type BerkasKegiatan = 'bahan' | 'surat_tugas'
+
+export const PERAN_KEGIATAN: readonly PeranKegiatan[] = ['narasumber', 'penguji', 'penceramah', 'pembicara', 'lainnya']
+
+export const LABEL_PERAN: Record<PeranKegiatan, string> = {
+  narasumber: 'Narasumber',
+  penguji: 'Penguji',
+  penceramah: 'Penceramah',
+  pembicara: 'Pembicara',
+  lainnya: 'Lainnya',
+}
+
+export const BERKAS_KEGIATAN: readonly BerkasKegiatan[] = ['bahan', 'surat_tugas']
+
+export const LABEL_BERKAS: Record<BerkasKegiatan, string> = {
+  bahan: 'Bahan',
+  surat_tugas: 'Surat tugas',
+}
+
 export function berandaRole(role: Role): string {
   return role === 'narasumber' ? '/narasumber' : '/admin'
 }

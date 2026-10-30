@@ -156,6 +156,26 @@ export const skemaReview = z.object({
   message: 'Tulis catatan perbaikan untuk narasumber',
 })
 
+// Menolak tanggal yang tidak ada di kalender, misalnya 2026-02-30.
+function tanggalNyata(t: string): boolean {
+  const d = new Date(`${t}T00:00:00Z`)
+  return !Number.isNaN(d.getTime()) && d.toISOString().startsWith(t)
+}
+
+// Riwayat kegiatan. Berkas bahan dan surat tugas diperiksa terpisah di server/utils/file.ts.
+export const skemaKegiatan = z.object({
+  nama_kegiatan: teks(500).min(3, 'Isi nama kegiatan'),
+  tanggal_kegiatan: z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Isi tanggal kegiatan')
+    .refine(tanggalNyata, 'Tanggal kegiatan tidak valid')
+    .refine(t => t >= '2000-01-01', 'Tanggal kegiatan paling awal tahun 2000'),
+  peran: z.enum(['narasumber', 'penguji', 'penceramah', 'pembicara', 'lainnya'], 'Pilih peran dari daftar'),
+  peran_lainnya: opsional(teks(100)),
+}).refine(k => k.peran !== 'lainnya' || !!k.peran_lainnya, {
+  path: ['peran_lainnya'],
+  message: 'Tulis peran Anda di kegiatan ini',
+}).transform(k => ({ ...k, peran_lainnya: k.peran === 'lainnya' ? k.peran_lainnya : null }))
+
 export const ROLE_STAF_ENUM = ['admin_unit', 'keuangan', 'inspektorat', 'super_admin'] as const
 
 export const skemaPenggunaBaru = z.object({

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cekKelengkapan, skemaDaftar, skemaDaftarMandiri, skemaProfil, skemaReview, skemaTolakPendaftaran } from '../shared/utils/validasi'
+import { cekKelengkapan, skemaDaftar, skemaDaftarMandiri, skemaKegiatan, skemaProfil, skemaReview, skemaTolakPendaftaran } from '../shared/utils/validasi'
 
 // Data palsu untuk pengujian, bukan data orang sungguhan.
 const lengkap = {
@@ -116,5 +116,38 @@ describe('skemaReview (FR-20)', () => {
 
   it('tidak mewajibkan catatan untuk disetujui', () => {
     expect(skemaReview.safeParse({ hasil: 'disetujui' }).success).toBe(true)
+  })
+})
+
+describe('skemaKegiatan (riwayat kegiatan)', () => {
+  const sah = { nama_kegiatan: 'Pelatihan Kepemimpinan Administrator', tanggal_kegiatan: '2026-03-12', peran: 'penguji' }
+
+  it('menerima isian lengkap', () => {
+    expect(skemaKegiatan.safeParse(sah).success).toBe(true)
+  })
+
+  it('menolak peran di luar daftar', () => {
+    expect(skemaKegiatan.safeParse({ ...sah, peran: 'moderator' }).success).toBe(false)
+  })
+
+  it('mewajibkan keterangan untuk peran lainnya', () => {
+    expect(skemaKegiatan.safeParse({ ...sah, peran: 'lainnya', peran_lainnya: '' }).success).toBe(false)
+    const hasil = skemaKegiatan.safeParse({ ...sah, peran: 'lainnya', peran_lainnya: 'Moderator' })
+    expect(hasil.success && hasil.data.peran_lainnya).toBe('Moderator')
+  })
+
+  it('mengosongkan peran_lainnya bila peran bukan lainnya', () => {
+    const hasil = skemaKegiatan.safeParse({ ...sah, peran_lainnya: 'Moderator' })
+    expect(hasil.success && hasil.data.peran_lainnya).toBeNull()
+  })
+
+  it('menolak tanggal yang tidak ada atau terlalu lama', () => {
+    expect(skemaKegiatan.safeParse({ ...sah, tanggal_kegiatan: '2026-02-30' }).success).toBe(false)
+    expect(skemaKegiatan.safeParse({ ...sah, tanggal_kegiatan: '2026-13-01' }).success).toBe(false)
+    expect(skemaKegiatan.safeParse({ ...sah, tanggal_kegiatan: '1999-12-31' }).success).toBe(false)
+  })
+
+  it('mewajibkan nama kegiatan', () => {
+    expect(skemaKegiatan.safeParse({ ...sah, nama_kegiatan: '  ' }).success).toBe(false)
   })
 })

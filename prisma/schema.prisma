@@ -49,6 +49,14 @@ enum JenisDokumen {
   cv
 }
 
+enum PeranKegiatan {
+  narasumber
+  penguji
+  penceramah
+  pembicara
+  lainnya
+}
+
 enum HasilReview {
   disetujui
   perlu_perbaikan
@@ -140,6 +148,7 @@ model Narasumber {
   unit_pengundang Unit?     @relation(fields: [unit_pengundang_id], references: [id], onDelete: SetNull)
   dokumen         Dokumen[]
   reviews         Review[]
+  kegiatan        Kegiatan[]
 
   @@index([status_review])
   @@index([nama_lengkap])
@@ -161,6 +170,28 @@ model Dokumen {
 
   @@unique([narasumber_id, jenis])
   @@map("dokumen")
+}
+
+// Riwayat kegiatan yang diikuti narasumber. Kedua berkas selalu PDF, jadi mime tidak disimpan.
+model Kegiatan {
+  id                    Int           @id @default(autoincrement())
+  narasumber_id         Int
+  nama_kegiatan         String
+  tanggal_kegiatan      DateTime      @db.Date
+  peran                 PeranKegiatan
+  peran_lainnya         String?
+  bahan_path            String
+  bahan_nama_asli       String
+  bahan_ukuran          Int
+  surat_tugas_path      String
+  surat_tugas_nama_asli String
+  surat_tugas_ukuran    Int
+  created_at            DateTime      @default(now())
+
+  narasumber Narasumber @relation(fields: [narasumber_id], references: [id], onDelete: Cascade)
+
+  @@index([narasumber_id, tanggal_kegiatan])
+  @@map("kegiatan")
 }
 
 model Undangan {

@@ -127,6 +127,26 @@ async function hapusData() {
             </template>
           </LembarData>
 
+          <section class="kartu overflow-hidden" aria-labelledby="judul-kegiatan">
+            <h2 id="judul-kegiatan" class="border-b border-garis bg-permukaan px-4 py-3 text-base">Riwayat kegiatan</h2>
+            <ul v-if="data.kegiatan.length">
+              <li v-for="k in data.kegiatan" :key="k.id" class="border-b border-garis px-4 py-3 last:border-b-0">
+                <p class="break-words font-medium">{{ k.nama_kegiatan }}</p>
+                <p class="mt-1 text-sm text-sekunder">
+                  {{ formatTanggal(k.tanggal_kegiatan) }} · {{ k.peran === 'lainnya' ? k.peran_lainnya : LABEL_PERAN[k.peran] }}
+                </p>
+                <p class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                  <span v-for="nama in BERKAS_KEGIATAN" :key="nama" class="min-w-0 break-words">
+                    <span class="text-sekunder">{{ LABEL_BERKAS[nama] }}: </span>
+                    <a v-if="data.boleh.unduh" :href="`/api/narasumber/${id}/kegiatan/${k.id}/${nama}`" target="_blank" rel="noopener" class="tautan">{{ k[nama].nama_asli }}</a>
+                    <span v-else>{{ k[nama].nama_asli }}</span>
+                  </span>
+                </p>
+              </li>
+            </ul>
+            <p v-else class="px-4 py-3 text-sekunder">Belum ada kegiatan yang dicatat.</p>
+          </section>
+
           <p v-if="data.pernyataan_benar_at" class="teks-kecil">
             Narasumber menyatakan data ini benar pada {{ formatWaktu(data.pernyataan_benar_at) }}.
           </p>

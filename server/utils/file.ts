@@ -3,8 +3,10 @@ import { join, resolve } from 'node:path'
 import { randomBytes } from 'node:crypto'
 import { fileTypeFromBuffer } from 'file-type'
 
+interface Aturan { tipe: Record<string, string>, maksMb: number, keterangan: string }
+
 // FRS FR-15. Tipe dicek dari isi file. DOC lama terbaca sebagai "cfb" (Compound File Binary).
-const ATURAN: Record<JenisDokumen, { tipe: Record<string, string>, maksMb: number, keterangan: string }> = {
+const ATURAN: Record<JenisDokumen, Aturan> = {
   npwp: { tipe: { pdf: 'application/pdf', jpg: 'image/jpeg', png: 'image/png' }, maksMb: 2, keterangan: 'PDF, JPG, atau PNG' },
   buku_tabungan: { tipe: { pdf: 'application/pdf', jpg: 'image/jpeg', png: 'image/png' }, maksMb: 2, keterangan: 'PDF, JPG, atau PNG' },
   cv: {
@@ -18,12 +20,22 @@ const ATURAN: Record<JenisDokumen, { tipe: Record<string, string>, maksMb: numbe
   },
 }
 
+// Bahan (paparan, hasil penilaian, catatan masukan) dan surat tugas di riwayat kegiatan.
+const ATURAN_KEGIATAN: Aturan = { tipe: { pdf: 'application/pdf' }, maksMb: 10, keterangan: 'PDF' }
+
 function folderDasar() {
   return resolve(useRuntimeConfig().folderDokumen)
 }
 
-export async function simpanDokumen(narasumberId: number, jenis: JenisDokumen, isi: Buffer) {
-  const aturan = ATURAN[jenis]
+export function simpanDokumen(narasumberId: number, jenis: JenisDokumen, isi: Buffer) {
+  return simpanBerkas(narasumberId, jenis, isi, ATURAN[jenis])
+}
+
+export function simpanBerkasKegiatan(narasumberId: number, berkas: BerkasKegiatan, isi: Buffer) {
+  return simpanBerkas(narasumberId, `kegiatan-${berkas}`, isi, ATURAN_KEGIATAN)
+}
+
+async function simpanBerkas(narasumberId: number, awalan: string, isi: Buffer, aturan: Aturan) {
   if (isi.length > aturan.maksMb * 1024 * 1024) {
     throw createError({ statusCode: 422, message: `Ukuran file maksimal ${aturan.maksMb} MB.` })
   }
@@ -34,7 +46,7 @@ export async function simpanDokumen(narasumberId: number, jenis: JenisDokumen, i
   }
   await pindaiVirus(isi)
   const ext = terdeteksi.ext === 'cfb' ? 'doc' : terdeteksi.ext
-  const relatif = join(String(narasumberId), `${jenis}-${randomBytes(8).toString('hex')}.${ext}`)
+  const relatif = join(String(narasumberId), `${awalan}-${randomBytes(8).toString('hex')}.${ext}`)
   await mkdir(join(folderDasar(), String(narasumberId)), { recursive: true })
   await writeFile(join(folderDasar(), relatif), isi)
   return { path: relatif, mime, ukuran: isi.length }

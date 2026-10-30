@@ -14,6 +14,7 @@ export default defineEventHandler(async (event) => {
     updated_at: ns.updated_at,
     unit_pengundang: ns.unit_pengundang?.nama ?? null,
     dokumen: ringkasDokumen(ns.dokumen),
+    kegiatan: ringkasKegiatan(ns.kegiatan),
     reviews: ns.reviews.map(r => ({
       id: r.id,
       hasil: r.hasil,

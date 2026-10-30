@@ -27,6 +27,7 @@ export async function cariNarasumberTerlihat(akun: Akun, id: number) {
       user: { select: { email: true, tipe: true } },
       unit_pengundang: true,
       dokumen: true,
+      kegiatan: { orderBy: [{ tanggal_kegiatan: 'desc' }, { id: 'desc' }] },
       reviews: { include: { reviewer: { select: { email: true, nama: true } } }, orderBy: { created_at: 'desc' } },
     },
   })

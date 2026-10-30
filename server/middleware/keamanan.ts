@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto'
 
 const MAKS_JSON = 256 * 1024
 const MAKS_UNGGAHAN = 5.5 * 1024 * 1024 // CV maksimal 5 MB ditambah amplop multipart
+const MAKS_UNGGAHAN_KEGIATAN = 20.5 * 1024 * 1024 // bahan dan surat tugas masing-masing maksimal 10 MB
 
 // Header keamanan, pemeriksaan asal permintaan (CSRF), dan batas ukuran body.
 // Berjalan sebelum middleware sesi karena urutan file abjad.
@@ -51,7 +52,10 @@ export default defineEventHandler((event) => {
     throw createError({ statusCode: 411, message: 'Ukuran permintaan harus diketahui.' })
   }
   const multipart = (getRequestHeader(event, 'content-type') ?? '').startsWith('multipart/form-data')
-  if (Number(panjang ?? 0) > (multipart ? MAKS_UNGGAHAN : MAKS_JSON)) {
-    throw createError({ statusCode: 413, message: multipart ? 'Ukuran file maksimal 5 MB.' : 'Permintaan terlalu besar.' })
+  const kegiatan = multipart && event.path === '/api/saya/kegiatan'
+  const maks = kegiatan ? MAKS_UNGGAHAN_KEGIATAN : multipart ? MAKS_UNGGAHAN : MAKS_JSON
+  if (Number(panjang ?? 0) > maks) {
+    const pesan = kegiatan ? 'Ukuran tiap file maksimal 10 MB.' : multipart ? 'Ukuran file maksimal 5 MB.' : 'Permintaan terlalu besar.'
+    throw createError({ statusCode: 413, message: pesan })
   }
 })

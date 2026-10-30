@@ -7,7 +7,11 @@ const tautan = computed(() => {
   const role = user.value?.role
   if (!role) return []
   if (role === 'narasumber') {
-    return [{ ke: '/narasumber', label: 'Data saya' }, { ke: '/akun', label: 'Akun' }]
+    return [
+      { ke: '/narasumber', label: 'Data saya' },
+      { ke: '/narasumber/kegiatan', label: 'Riwayat kegiatan' },
+      { ke: '/akun', label: 'Akun' },
+    ]
   }
   return [
     { ke: '/admin', label: 'Narasumber', tampil: boleh(role, 'lihat_daftar') },
@@ -20,7 +24,9 @@ const tautan = computed(() => {
 })
 
 function aktif(ke: string) {
-  return ke === '/admin' ? route.path === '/admin' || route.path.startsWith('/admin/narasumber') : route.path.startsWith(ke)
+  if (ke === '/admin') return route.path === '/admin' || route.path.startsWith('/admin/narasumber')
+  if (ke === '/narasumber') return route.path === '/narasumber' || route.path === '/narasumber/isi'
+  return route.path.startsWith(ke)
 }
 
 watch(() => route.fullPath, () => { menuTerbuka.value = false })

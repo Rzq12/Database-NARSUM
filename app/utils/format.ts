@@ -37,4 +37,6 @@ export const LABEL_AKSI: Record<string, string> = {
   ubah_role: 'Ubah role',
   kelola_unit: 'Kelola unit',
   hapus_data: 'Hapus data narasumber',
+  tambah_kegiatan: 'Tambah riwayat kegiatan',
+  hapus_kegiatan: 'Hapus riwayat kegiatan',
 }
