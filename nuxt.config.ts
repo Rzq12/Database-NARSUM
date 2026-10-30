@@ -40,7 +40,11 @@ export default defineNuxtConfig({
       password: '', // diisi dari NUXT_SESSION_PASSWORD
     },
     public: {
-      urlAplikasi: 'http://localhost:3000',
+      // Di Vercel, alamat produksi diambil dari variabel sistem VERCEL_PROJECT_PRODUCTION_URL saat build.
+      // NUXT_PUBLIC_URL_APLIKASI tetap menimpanya bila diisi (misalnya untuk domain sendiri).
+      urlAplikasi: process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : 'http://localhost:3000',
       myasnUrl: 'https://myasn.bkn.go.id',
     },
   },
