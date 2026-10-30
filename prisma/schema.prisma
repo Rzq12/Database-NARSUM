@@ -172,7 +172,8 @@ model Dokumen {
   @@map("dokumen")
 }
 
-// Riwayat kegiatan yang diikuti narasumber. Kedua berkas selalu PDF, jadi mime tidak disimpan.
+// Riwayat kegiatan yang diikuti narasumber. Berkas selalu PDF, jadi mime tidak disimpan.
+// Bahan boleh kosong (tidak semua peran punya paparan); surat tugas wajib.
 model Kegiatan {
   id                    Int           @id @default(autoincrement())
   narasumber_id         Int
@@ -180,9 +181,9 @@ model Kegiatan {
   tanggal_kegiatan      DateTime      @db.Date
   peran                 PeranKegiatan
   peran_lainnya         String?
-  bahan_path            String
-  bahan_nama_asli       String
-  bahan_ukuran          Int
+  bahan_path            String?
+  bahan_nama_asli       String?
+  bahan_ukuran          Int?
   surat_tugas_path      String
   surat_tugas_nama_asli String
   surat_tugas_ukuran    Int

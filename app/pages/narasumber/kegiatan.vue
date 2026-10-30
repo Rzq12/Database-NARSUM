@@ -10,7 +10,7 @@ const siapIsi = computed(() => !!saya.value?.akun.terverifikasi && saya.value.st
 // Sama dengan aturan server di server/utils/file.ts. Server tetap memeriksa isi file.
 const MAKS_MB = 10
 const PETUNJUK_BERKAS: Record<BerkasKegiatan, string> = {
-  bahan: 'Paparan, hasil penilaian, catatan masukan, atau bahan lain. PDF, maksimal 10 MB.',
+  bahan: 'Boleh dikosongkan. Paparan, hasil penilaian, catatan masukan, atau bahan lain. PDF, maksimal 10 MB.',
   surat_tugas: 'Surat tugas dari instansi. PDF, maksimal 10 MB.',
 }
 
@@ -156,7 +156,7 @@ async function hapusKegiatan() {
         </template>
       </KolomIsian>
 
-      <KolomIsian v-for="nama in BERKAS_KEGIATAN" :id="nama" :key="nama" :label="`Unggah ${LABEL_BERKAS[nama].toLowerCase()}`" wajib :galat="galat[nama]" :petunjuk="PETUNJUK_BERKAS[nama]">
+      <KolomIsian v-for="nama in BERKAS_KEGIATAN" :id="nama" :key="nama" :label="`Unggah ${LABEL_BERKAS[nama].toLowerCase()}`" :wajib="nama === 'surat_tugas'" :galat="galat[nama]" :petunjuk="PETUNJUK_BERKAS[nama]">
         <template #default="{ id, invalid, describedby }">
           <input :id="id" type="file" accept=".pdf,application/pdf" class="isian" :aria-invalid="invalid" :aria-describedby="describedby" @change="pilihBerkas(nama, $event)">
         </template>
@@ -196,8 +196,11 @@ async function hapusKegiatan() {
             <div v-for="nama in BERKAS_KEGIATAN" :key="nama" class="flex flex-wrap gap-x-2">
               <dt class="text-sekunder">{{ LABEL_BERKAS[nama] }}:</dt>
               <dd class="min-w-0 break-words">
-                <a :href="`/api/saya/kegiatan/${k.id}/${nama}`" target="_blank" rel="noopener" class="tautan">{{ k[nama].nama_asli }}</a>
-                <span class="text-sekunder"> · {{ formatUkuran(k[nama].ukuran) }}</span>
+                <template v-if="k[nama]">
+                  <a :href="`/api/saya/kegiatan/${k.id}/${nama}`" target="_blank" rel="noopener" class="tautan">{{ k[nama].nama_asli }}</a>
+                  <span class="text-sekunder"> · {{ formatUkuran(k[nama].ukuran) }}</span>
+                </template>
+                <span v-else class="text-sekunder">Tidak diunggah</span>
               </dd>
             </div>
           </dl>
@@ -206,7 +209,7 @@ async function hapusKegiatan() {
     </template>
 
     <Dialog ref="dialog-hapus" judul="Hapus kegiatan ini?">
-      <p class="text-arang">Kegiatan "{{ hapus.nama }}" beserta bahan dan surat tugasnya akan dihapus permanen.</p>
+      <p class="text-arang">Kegiatan "{{ hapus.nama }}" beserta berkasnya akan dihapus permanen.</p>
       <Pesan v-if="hapus.pesan" jenis="galat" class="mt-3">{{ hapus.pesan }}</Pesan>
       <div class="mt-5 flex flex-wrap gap-3">
         <button type="button" class="tombol-bahaya" :disabled="hapus.sedang" @click="hapusKegiatan">{{ hapus.sedang ? 'Menghapus…' : 'Ya, hapus' }}</button>

@@ -1,4 +1,4 @@
-// Tambah riwayat kegiatan. Isian dan kedua berkas PDF dikirim dalam satu permintaan multipart.
+// Tambah riwayat kegiatan. Isian, surat tugas (wajib), dan bahan (opsional) dikirim dalam satu permintaan multipart.
 export default defineEventHandler(async (event) => {
   const akun = await requireNarasumberSiapIsi(event)
   const bagian = (await readMultipartFormData(event)) ?? []
@@ -7,22 +7,22 @@ export default defineEventHandler(async (event) => {
 
   const hasil = skemaKegiatan.safeParse(isian)
   const galat = hasil.success ? {} : galatPerKolom(hasil.error)
-  for (const nama of BERKAS_KEGIATAN) {
-    if (!cariBerkas(nama)) galat[nama] = `Unggah file ${LABEL_BERKAS[nama].toLowerCase()} dalam format PDF`
-  }
   const bahan = cariBerkas('bahan')
   const suratTugas = cariBerkas('surat_tugas')
-  if (!hasil.success || !bahan || !suratTugas) throw galat422(galat)
+  if (!suratTugas) galat.surat_tugas = 'Unggah file surat tugas dalam format PDF'
+  if (!hasil.success || !suratTugas) throw galat422(galat)
 
   const ns = await prisma.narasumber.findUniqueOrThrow({ where: { user_id: akun.id } })
-  const fileBahan = await simpanBerkasKegiatan(ns.id, 'bahan', bahan.data)
-  let fileSurat
-  try {
-    fileSurat = await simpanBerkasKegiatan(ns.id, 'surat_tugas', suratTugas.data)
-  }
-  catch (e) {
-    await hapusFile(fileBahan.path)
-    throw e
+  const fileSurat = await simpanBerkasKegiatan(ns.id, 'surat_tugas', suratTugas.data)
+  let fileBahan = null
+  if (bahan) {
+    try {
+      fileBahan = await simpanBerkasKegiatan(ns.id, 'bahan', bahan.data)
+    }
+    catch (e) {
+      await hapusFile(fileSurat.path)
+      throw e
+    }
   }
 
   const data = hasil.data
@@ -33,9 +33,9 @@ export default defineEventHandler(async (event) => {
       tanggal_kegiatan: new Date(`${data.tanggal_kegiatan}T00:00:00Z`),
       peran: data.peran,
       peran_lainnya: data.peran_lainnya,
-      bahan_path: fileBahan.path,
-      bahan_nama_asli: bahan.filename!.slice(0, 200),
-      bahan_ukuran: fileBahan.ukuran,
+      bahan_path: fileBahan?.path ?? null,
+      bahan_nama_asli: bahan && fileBahan ? bahan.filename!.slice(0, 200) : null,
+      bahan_ukuran: fileBahan?.ukuran ?? null,
       surat_tugas_path: fileSurat.path,
       surat_tugas_nama_asli: suratTugas.filename!.slice(0, 200),
       surat_tugas_ukuran: fileSurat.ukuran,

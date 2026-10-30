@@ -138,7 +138,8 @@ async function hapusData() {
                 <p class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-sm">
                   <span v-for="nama in BERKAS_KEGIATAN" :key="nama" class="min-w-0 break-words">
                     <span class="text-sekunder">{{ LABEL_BERKAS[nama] }}: </span>
-                    <a v-if="data.boleh.unduh" :href="`/api/narasumber/${id}/kegiatan/${k.id}/${nama}`" target="_blank" rel="noopener" class="tautan">{{ k[nama].nama_asli }}</a>
+                    <span v-if="!k[nama]" class="text-sekunder">Tidak diunggah</span>
+                    <a v-else-if="data.boleh.unduh" :href="`/api/narasumber/${id}/kegiatan/${k.id}/${nama}`" target="_blank" rel="noopener" class="tautan">{{ k[nama].nama_asli }}</a>
                     <span v-else>{{ k[nama].nama_asli }}</span>
                   </span>
                 </p>

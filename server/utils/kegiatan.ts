@@ -14,7 +14,7 @@ export function ringkasKegiatan(kegiatan: Kegiatan[]) {
     tanggal_kegiatan: k.tanggal_kegiatan.toISOString().slice(0, 10),
     peran: k.peran,
     peran_lainnya: k.peran_lainnya,
-    bahan: { nama_asli: k.bahan_nama_asli, ukuran: k.bahan_ukuran },
+    bahan: k.bahan_nama_asli ? { nama_asli: k.bahan_nama_asli, ukuran: k.bahan_ukuran ?? 0 } : null,
     surat_tugas: { nama_asli: k.surat_tugas_nama_asli, ukuran: k.surat_tugas_ukuran },
     created_at: k.created_at,
   }))
@@ -24,5 +24,6 @@ export function kirimBerkasKegiatan(event: H3Event, k: Kegiatan, berkas: BerkasK
   const dok = berkas === 'bahan'
     ? { path: k.bahan_path, nama_asli: k.bahan_nama_asli }
     : { path: k.surat_tugas_path, nama_asli: k.surat_tugas_nama_asli }
-  return kirimDokumen(event, { ...dok, mime: 'application/pdf' })
+  if (!dok.path || !dok.nama_asli) throw createError({ statusCode: 404, message: 'Bahan tidak diunggah untuk kegiatan ini.' })
+  return kirimDokumen(event, { path: dok.path, nama_asli: dok.nama_asli, mime: 'application/pdf' })
 }
