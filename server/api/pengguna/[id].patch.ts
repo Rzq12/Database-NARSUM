@@ -9,8 +9,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 409, message: 'Anda tidak bisa menonaktifkan atau menurunkan role akun sendiri.' })
   }
   const role = body.role ?? target.role
-  if (role === 'admin_unit' && body.unit_ids && body.unit_ids.length === 0) {
-    throw galat422({ unit_ids: 'Admin Unit harus ditautkan ke minimal satu unit' })
+  // Tanpa unit_ids di body, unit yang sudah tertaut tetap dipakai; akun yang baru dijadikan Admin Unit belum punya.
+  // Hanya dicek saat role atau unit diubah, agar mengubah status saja tetap bisa dilakukan.
+  if (role === 'admin_unit' && (body.role || body.unit_ids)) {
+    const jumlahUnit = body.unit_ids?.length ?? await prisma.userUnit.count({ where: { user_id: id } })
+    if (jumlahUnit === 0) throw galat422({ unit_ids: 'Admin Unit harus ditautkan ke minimal satu unit' })
   }
 
   await prisma.$transaction(async (tx) => {

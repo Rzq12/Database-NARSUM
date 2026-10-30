@@ -5,12 +5,17 @@ const KUNCI_MENIT = 15
 export default defineEventHandler(async (event) => {
   batasiPermintaan(event, 'login', 10, 5 * 60_000)
   const { identitas, password } = await bacaBody(event, skemaLogin)
-  const hp = identitas.replace(/[\s-]/g, '')
+  const hp = normalisasiHp(identitas)
   const akun = await prisma.user.findFirst({
     where: { OR: [{ email: identitas.toLowerCase() }, { no_hp: hp }] },
     include: { narasumber: { select: { nama_lengkap: true } } },
   })
-  const salah = createError({ statusCode: 401, message: 'Email/nomor HP atau password salah.' })
+  // Satu pesan untuk akun tidak ada, password salah, dan akun terkunci, supaya jawaban login tidak
+  // membocorkan email yang terdaftar dan tebakan password selama terkunci tidak memberi petunjuk.
+  const salah = createError({
+    statusCode: 401,
+    message: `Email/nomor HP atau password salah. Setelah ${BATAS_GAGAL} kali gagal, akun dikunci ${KUNCI_MENIT} menit.`,
+  })
 
   if (!akun || !akun.password_hash) {
     await verifikasiTiruan(password)
@@ -18,8 +23,9 @@ export default defineEventHandler(async (event) => {
     throw salah
   }
   if (akun.terkunci_sampai && akun.terkunci_sampai > new Date()) {
-    const jam = akun.terkunci_sampai.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
-    throw createError({ statusCode: 423, message: `Akun terkunci sementara karena ${BATAS_GAGAL} kali gagal masuk. Coba lagi setelah pukul ${jam}.` })
+    await verifikasiTiruan(password)
+    await catatAudit(event, { pelaku: akun, aksi: 'login_gagal', keterangan: 'akun terkunci' })
+    throw salah
   }
 
   if (!(await cocokPassword(akun.password_hash, password))) {

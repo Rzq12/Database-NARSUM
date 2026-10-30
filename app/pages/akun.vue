@@ -38,11 +38,11 @@ async function simpan() {
   <div class="mx-auto max-w-2xl px-4 py-10">
     <h1 class="text-3xl">Akun</h1>
     <dl class="mt-6 border-t border-garis">
-      <div class="grid gap-1 border-b border-garis py-3 sm:grid-cols-[10rem_1fr]">
+      <div class="grid grid-cols-[minmax(0,1fr)] gap-1 border-b border-garis py-3 sm:grid-cols-[10rem_minmax(0,1fr)]">
         <dt class="text-arang">Email</dt>
         <dd class="break-words font-medium">{{ user?.email }}</dd>
       </div>
-      <div class="grid gap-1 border-b border-garis py-3 sm:grid-cols-[10rem_1fr]">
+      <div class="grid grid-cols-[minmax(0,1fr)] gap-1 border-b border-garis py-3 sm:grid-cols-[10rem_minmax(0,1fr)]">
         <dt class="text-arang">Role</dt>
         <dd class="font-medium">{{ user ? LABEL_ROLE[user.role] : '' }}</dd>
       </div>

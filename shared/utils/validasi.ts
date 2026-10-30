@@ -18,9 +18,18 @@ const teks = (maks = 255) => z.string().trim().max(maks, `Maksimal ${maks} karak
 
 export const skemaEmail = z.string().trim().toLowerCase().pipe(z.email('Format email tidak valid'))
 
+// +62 dan 0 di depan adalah nomor yang sama. Disimpan dalam satu bentuk (0…) agar keunikan nomor HP
+// tidak bisa dilewati dengan menulis ulang awalannya.
+export function normalisasiHp(v: string): string {
+  const hp = v.replace(/[\s-]/g, '')
+  return hp.startsWith('+62') ? `0${hp.slice(3)}` : hp
+}
+
 export const skemaHp = z.preprocess(
   v => (typeof v === 'string' ? v.replace(/[\s-]/g, '') : v),
-  z.string().regex(/^(08\d{7,12}|\+62\d{8,13})$/, 'Nomor diawali 08 atau +62, 9 sampai 14 digit'),
+  z.string()
+    .regex(/^(08\d{7,12}|\+628\d{7,12})$/, 'Nomor diawali 08 atau +62, 9 sampai 14 digit')
+    .transform(normalisasiHp),
 )
 
 export const skemaPassword = z.string().min(10, 'Password minimal 10 karakter').max(200, 'Password terlalu panjang')

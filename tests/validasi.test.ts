@@ -48,8 +48,13 @@ describe('skemaProfil (FR-11)', () => {
     expect(galatDari({ [kolom]: nilai })[kolom]).toBe(pesan)
   })
 
-  it('menerima nomor HP berawalan +62', () => {
+  it('menerima nomor HP berawalan +62 dan menyimpannya dalam bentuk 08', () => {
     expect(galatDari({ no_telp_hp: '+6281200000000' })).toEqual({})
+    expect(skemaProfil.parse({ no_telp_hp: '+62 812-0000-0000' }).no_telp_hp).toBe('081200000000')
+  })
+
+  it('menolak +62 yang tidak diikuti 8', () => {
+    expect(galatDari({ no_telp_hp: '+622100000000' }).no_telp_hp).toBe('Nomor diawali 08 atau +62, 9 sampai 14 digit')
   })
 
   it('menolak usia di bawah 17 tahun', () => {
@@ -87,6 +92,11 @@ describe('skemaDaftar (FR-01)', () => {
 
   it('menyimpan email dalam huruf kecil', () => {
     expect(skemaDaftar.parse({ ...dasar, email: 'Uji@Contoh.TEST' }).email).toBe('uji@contoh.test')
+  })
+
+  it('menyimpan nomor HP +62 dan 08 dalam bentuk yang sama, agar keunikan tidak bisa dilewati', () => {
+    expect(skemaDaftar.parse({ ...dasar, no_hp: '+6281200000000' }).no_hp).toBe('081200000000')
+    expect(skemaDaftar.parse({ ...dasar, no_hp: '081200000000' }).no_hp).toBe('081200000000')
   })
 })
 

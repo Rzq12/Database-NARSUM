@@ -9,7 +9,13 @@ const skemaSimpan = z.object({
 // FR-12 (draf), FR-13 (final dengan pernyataan), FR-14 (simpan ulang kembali ke menunggu review).
 export default defineEventHandler(async (event) => {
   const akun = await requireNarasumberSiapIsi(event)
-  const { profil, final, pernyataan } = await bacaBody(event, skemaSimpan)
+  const hasil = skemaSimpan.safeParse(await readBody(event))
+  if (!hasil.success) {
+    // Galat kolom profil dikirim dengan nama kolomnya saja (nik, bukan profil.nik), sama dengan id kolom di formulir.
+    const galat = Object.fromEntries(Object.entries(galatPerKolom(hasil.error)).map(([k, v]) => [k.replace(/^profil\./, ''), v]))
+    throw galat422(galat)
+  }
+  const { profil, final, pernyataan } = hasil.data
   const tipe = akun.tipe ?? 'non_asn'
   const ns = await prisma.narasumber.findUniqueOrThrow({
     where: { user_id: akun.id },

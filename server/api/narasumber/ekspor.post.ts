@@ -12,7 +12,8 @@ const skemaEkspor = z.object({
   format: z.enum(['xlsx', 'csv']),
 })
 
-// Mencegah sel CSV/XLSX dibaca sebagai rumus saat dibuka di spreadsheet.
+// Mencegah sel CSV dibaca sebagai rumus saat dibuka di spreadsheet. XLSX tidak perlu: sel ditulis
+// sebagai teks, jadi tidak pernah dijalankan sebagai rumus, dan tanda kutip akan ikut tampil sebagai isi.
 function amankanSel(v: string) {
   return /^[=+\-@\t\r]/.test(v) ? `'${v}` : v
 }
@@ -35,7 +36,7 @@ export default defineEventHandler(async (event) => {
       status_review: LABEL_STATUS[n.status_review],
       unit_pengundang: n.unit_pengundang?.nama ?? '',
     }
-    return kolom.map(k => amankanSel(nilai[k]))
+    return kolom.map(k => nilai[k])
   })
 
   const sensitif = kolom.filter(k => (KOLOM_SENSITIF as string[]).includes(k))
@@ -51,7 +52,7 @@ export default defineEventHandler(async (event) => {
   setResponseHeader(event, 'Cache-Control', 'private, no-store')
 
   if (format === 'csv') {
-    const sel = (v: string) => `"${v.replace(/"/g, '""')}"`
+    const sel = (v: string) => `"${amankanSel(v).replace(/"/g, '""')}"`
     const isi = [kolom.map(k => LABEL[k]), ...baris].map(b => b.map(sel).join(',')).join('\r\n')
     setResponseHeader(event, 'Content-Type', 'text/csv; charset=utf-8')
     return `﻿${isi}`
