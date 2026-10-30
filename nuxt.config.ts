@@ -31,6 +31,12 @@ export default defineNuxtConfig({
     smtpPass: '',
     smtpFrom: '',
     folderDokumen: '.data/dokumen',
+    // Penyimpanan dokumen S3-compatible (Supabase Storage). Bila s3Endpoint kosong, dokumen disimpan di folderDokumen.
+    s3Endpoint: '',
+    s3Region: 'us-east-1',
+    s3Bucket: '',
+    s3AccessKeyId: '',
+    s3SecretAccessKey: '',
     percayaProxy: false,
     clamavHost: '',
     clamavPort: '3310',

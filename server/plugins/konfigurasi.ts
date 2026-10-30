@@ -8,6 +8,11 @@ export default defineNitroPlugin(() => {
   if (!/^[0-9a-f]{64}$/i.test(c.kunciIndeks)) kurang.push('NUXT_KUNCI_INDEKS (64 karakter hex)')
   if ((c.session?.password ?? '').length < 32) kurang.push('NUXT_SESSION_PASSWORD (minimal 32 karakter)')
   if (!c.smtpHost) kurang.push('NUXT_SMTP_HOST')
+  // Disk fungsi Vercel tidak bisa ditulis, jadi dokumen wajib disimpan di S3.
+  if (process.env.VERCEL && !c.s3Endpoint) kurang.push('NUXT_S3_ENDPOINT (Vercel tidak bisa menyimpan file di disk)')
+  if (c.s3Endpoint && (!c.s3Bucket || !c.s3AccessKeyId || !c.s3SecretAccessKey)) {
+    kurang.push('NUXT_S3_BUCKET, NUXT_S3_ACCESS_KEY_ID, NUXT_S3_SECRET_ACCESS_KEY')
+  }
   if (kurang.length) throw new Error(`Konfigurasi produksi belum lengkap: ${kurang.join(', ')}`)
   if (!c.public.urlAplikasi.startsWith('https://')) {
     console.warn('Peringatan: NUXT_PUBLIC_URL_APLIKASI bukan https. NFR-01 mewajibkan HTTPS di produksi.')

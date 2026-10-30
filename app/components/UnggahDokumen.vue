@@ -11,7 +11,7 @@ const emit = defineEmits<{ berubah: [] }>()
 const ATURAN = {
   npwp: { accept: '.pdf,.jpg,.jpeg,.png', maksMb: 2, teks: 'PDF, JPG, atau PNG, maksimal 2 MB' },
   buku_tabungan: { accept: '.pdf,.jpg,.jpeg,.png', maksMb: 2, teks: 'PDF, JPG, atau PNG, maksimal 2 MB' },
-  cv: { accept: '.pdf,.doc,.docx', maksMb: 5, teks: 'PDF, DOC, atau DOCX, maksimal 5 MB' },
+  cv: { accept: '.pdf,.doc,.docx', maksMb: 4, teks: 'PDF, DOC, atau DOCX, maksimal 4 MB' },
 }
 const aturan = computed(() => ATURAN[props.jenis])
 const id = computed(() => `dokumen-${props.jenis}`)

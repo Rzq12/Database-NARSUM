@@ -8,10 +8,10 @@ useSesiHabis(error)
 const siapIsi = computed(() => !!saya.value?.akun.terverifikasi && saya.value.status_pendaftaran === 'disetujui')
 
 // Sama dengan aturan server di server/utils/file.ts. Server tetap memeriksa isi file.
-const MAKS_MB = 10
+const MAKS_MB = 4
 const PETUNJUK_BERKAS: Record<BerkasKegiatan, string> = {
-  bahan: 'Boleh dikosongkan. Paparan, hasil penilaian, catatan masukan, atau bahan lain. PDF, maksimal 10 MB.',
-  surat_tugas: 'Surat tugas dari instansi. PDF, maksimal 10 MB.',
+  bahan: 'Boleh dikosongkan. Paparan, hasil penilaian, catatan masukan, atau bahan lain. PDF, maksimal 4 MB.',
+  surat_tugas: 'Surat tugas dari instansi. PDF, maksimal 4 MB.',
 }
 
 const formTerbuka = ref(false)
@@ -22,6 +22,32 @@ const galat = ref<Record<string, string>>({})
 const pesan = ref('')
 const menyimpan = ref(false)
 const tersimpan = ref(false)
+const pesanBahan = ref('')
+const mengunggahBahan = ref<number | null>(null)
+
+async function unggahBahan(id: number, e: Event) {
+  const input = e.target as HTMLInputElement
+  const f = input.files?.[0]
+  input.value = ''
+  if (!f) return
+  pesanBahan.value = ''
+  if (f.size > MAKS_MB * 1024 * 1024) {
+    pesanBahan.value = `Ukuran file bahan maksimal ${MAKS_MB} MB.`
+    return
+  }
+  mengunggahBahan.value = id
+  try {
+    await kirimBahan(id, f)
+    await refresh()
+  }
+  catch (err) {
+    const g = bacaGalat(err)
+    if (!(await tanganiSesiHabis(g))) pesanBahan.value = g.galat.bahan ?? g.pesan
+  }
+  finally {
+    mengunggahBahan.value = null
+  }
+}
 
 function bukaForm() {
   formTerbuka.value = true
@@ -51,20 +77,37 @@ function tutupForm() {
   formTerbuka.value = false
 }
 
+// Bahan dikirim setelah kegiatan tersimpan, agar tiap permintaan hanya membawa satu file (batas 4,5 MB Vercel).
+async function kirimBahan(id: number, f: File) {
+  const body = new FormData()
+  body.append('berkas', f)
+  await $fetch(`/api/saya/kegiatan/${id}/bahan`, { method: 'POST', body })
+}
+
 async function simpan() {
   galat.value = {}
   pesan.value = ''
+  pesanBahan.value = ''
   const body = new FormData()
   for (const [k, v] of Object.entries(form)) body.append(k, v)
-  for (const nama of BERKAS_KEGIATAN) {
-    const f = berkas[nama]
-    if (f) body.append(nama, f)
-  }
+  if (berkas.surat_tugas) body.append('surat_tugas', berkas.surat_tugas)
+  const bahan = berkas.bahan
   menyimpan.value = true
   try {
-    await $fetch('/api/saya/kegiatan', { method: 'POST', body })
+    const k = await $fetch('/api/saya/kegiatan', { method: 'POST', body })
     tutupForm()
     tersimpan.value = true
+    if (bahan) {
+      try {
+        await kirimBahan(k.id, bahan)
+      }
+      catch (e) {
+        const g = bacaGalat(e)
+        if (await tanganiSesiHabis(g)) return
+        tersimpan.value = false
+        pesanBahan.value = `Kegiatan tersimpan, tetapi bahan gagal diunggah: ${g.galat.bahan ?? g.pesan} Unggah lagi lewat tombol "Unggah bahan" di daftar.`
+      }
+    }
     await refresh()
   }
   catch (e) {
@@ -122,6 +165,7 @@ async function hapusKegiatan() {
     </Pesan>
 
     <Pesan v-if="tersimpan" jenis="sukses" class="mt-6">Kegiatan tersimpan.</Pesan>
+    <Pesan v-if="pesanBahan" jenis="galat" class="mt-6">{{ pesanBahan }}</Pesan>
 
     <form v-if="formTerbuka" class="kartu mt-6 space-y-5 p-5" novalidate @submit.prevent="simpan">
       <h2 class="text-lg">Tambah kegiatan</h2>
@@ -200,7 +244,13 @@ async function hapusKegiatan() {
                   <a :href="`/api/saya/kegiatan/${k.id}/${nama}`" target="_blank" rel="noopener" class="tautan">{{ k[nama].nama_asli }}</a>
                   <span class="text-sekunder"> · {{ formatUkuran(k[nama].ukuran) }}</span>
                 </template>
-                <span v-else class="text-sekunder">Tidak diunggah</span>
+                <template v-else>
+                  <span class="text-sekunder">Tidak diunggah</span>
+                  <label v-if="nama === 'bahan'" class="tautan ml-2 cursor-pointer focus-within:outline focus-within:outline-2 focus-within:outline-[var(--fokus)]" :class="{ 'pointer-events-none opacity-60': mengunggahBahan === k.id }">
+                    {{ mengunggahBahan === k.id ? 'Mengunggah…' : 'Unggah bahan' }}
+                    <input type="file" accept=".pdf,application/pdf" class="sr-only" :aria-label="`Unggah bahan untuk ${k.nama_kegiatan}`" :disabled="mengunggahBahan !== null" @change="unggahBahan(k.id, $event)">
+                  </label>
+                </template>
               </dd>
             </div>
           </dl>
