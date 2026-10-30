@@ -1,0 +1,212 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../server/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  narasumber
+  admin_unit
+  keuangan
+  inspektorat
+  super_admin
+}
+
+enum TipeNarasumber {
+  asn
+  non_asn
+}
+
+enum StatusAkun {
+  aktif
+  nonaktif
+}
+
+enum StatusReview {
+  draf
+  menunggu_review
+  disetujui
+  perlu_perbaikan
+}
+
+enum JenisDokumen {
+  npwp
+  buku_tabungan
+  cv
+}
+
+enum HasilReview {
+  disetujui
+  perlu_perbaikan
+}
+
+enum JenisToken {
+  verifikasi
+  reset
+}
+
+model User {
+  id                Int             @id @default(autoincrement())
+  nama              String?
+  email             String          @unique
+  no_hp             String?         @unique
+  password_hash     String?
+  role              Role
+  tipe              TipeNarasumber?
+  email_verified_at DateTime?
+  status            StatusAkun      @default(aktif)
+  gagal_login       Int             @default(0)
+  terkunci_sampai   DateTime?
+  created_at        DateTime        @default(now())
+
+  units      UserUnit[]
+  narasumber Narasumber?
+  tokens     TokenAkun[]
+  reviews    Review[]
+  undangan   Undangan[]
+
+  @@map("users")
+}
+
+model Unit {
+  id         Int      @id @default(autoincrement())
+  nama       String   @unique
+  created_at DateTime @default(now())
+
+  users      UserUnit[]
+  undangan   Undangan[]
+  narasumber Narasumber[]
+
+  @@map("units")
+}
+
+model UserUnit {
+  user_id Int
+  unit_id Int
+  user    User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  unit    Unit @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+
+  @@id([user_id, unit_id])
+  @@map("user_units")
+}
+
+model Narasumber {
+  id                    Int          @id @default(autoincrement())
+  user_id               Int          @unique
+  unit_pengundang_id    Int?
+  nama_lengkap          String?
+  nip                   String?
+  nik_enc               String?
+  nik_indeks            String?      @unique
+  tempat_lahir          String?
+  tanggal_lahir         DateTime?    @db.Date
+  pangkat_golongan      String?
+  npwp_enc              String?
+  jabatan               String?
+  eselon                String?
+  instansi              String?
+  alamat_kantor         String?
+  no_telp_hp            String?
+  agama                 String?
+  pendidikan_terakhir   String?
+  nama_bank             String?
+  no_rekening_enc       String?
+  nama_pemilik_rekening String?
+  status_review         StatusReview @default(draf)
+  pernyataan_benar_at   DateTime?
+  created_at            DateTime     @default(now())
+  updated_at            DateTime     @updatedAt
+
+  user            User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  unit_pengundang Unit?     @relation(fields: [unit_pengundang_id], references: [id], onDelete: SetNull)
+  dokumen         Dokumen[]
+  reviews         Review[]
+
+  @@index([status_review])
+  @@index([nama_lengkap])
+  @@index([instansi])
+  @@map("narasumber")
+}
+
+model Dokumen {
+  id            Int          @id @default(autoincrement())
+  narasumber_id Int
+  jenis         JenisDokumen
+  path          String
+  mime          String
+  ukuran        Int
+  nama_asli     String
+  uploaded_at   DateTime     @default(now())
+
+  narasumber Narasumber @relation(fields: [narasumber_id], references: [id], onDelete: Cascade)
+
+  @@unique([narasumber_id, jenis])
+  @@map("dokumen")
+}
+
+model Undangan {
+  id             Int       @id @default(autoincrement())
+  token_hash     String    @unique
+  unit_id        Int
+  dibuat_oleh    Int
+  email_tujuan   String?
+  kedaluwarsa_at DateTime
+  dipakai_at     DateTime?
+  dicabut_at     DateTime?
+  dikirim_at     DateTime?
+  created_at     DateTime  @default(now())
+
+  unit    Unit @relation(fields: [unit_id], references: [id], onDelete: Cascade)
+  pembuat User @relation(fields: [dibuat_oleh], references: [id], onDelete: Cascade)
+
+  @@map("undangan")
+}
+
+model Review {
+  id            Int         @id @default(autoincrement())
+  narasumber_id Int
+  reviewer_id   Int
+  hasil         HasilReview
+  catatan       String?
+  created_at    DateTime    @default(now())
+
+  narasumber Narasumber @relation(fields: [narasumber_id], references: [id], onDelete: Cascade)
+  reviewer   User       @relation(fields: [reviewer_id], references: [id], onDelete: Cascade)
+
+  @@map("review")
+}
+
+model TokenAkun {
+  id             Int        @id @default(autoincrement())
+  user_id        Int
+  jenis          JenisToken
+  token_hash     String     @unique
+  kedaluwarsa_at DateTime
+  dipakai_at     DateTime?
+  created_at     DateTime   @default(now())
+
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, jenis, created_at])
+  @@map("token_akun")
+}
+
+// Tanpa relasi ke users: entri tetap ada walau akun pelaku dihapus.
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  user_id    Int?
+  pelaku     String?
+  aksi       String
+  objek      String?
+  objek_id   String?
+  keterangan String?
+  ip         String?
+  waktu      DateTime @default(now())
+
+  @@index([waktu])
+  @@index([aksi])
+  @@map("audit_log")
+}

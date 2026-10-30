@@ -1,0 +1,157 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Token dari notion-DESIGN.md. Kontras tiap pasangan sudah dicek dengan contrast-check.py (WCAG AA). */
+:root {
+  color-scheme: light;
+  --kanvas: #ffffff;
+  --permukaan: #f6f5f4;
+  --garis: #e5e3df;
+  --garis-kuat: #8a867e;
+  --tinta: #1a1a1a;
+  --arang: #37352f;
+  --sekunder: #5d5b54;
+  --utama: #5645d4;
+  --utama-tekan: #4534b3;
+  --fokus: #5645d4;
+  --navy: #0a1530;
+  --navy-teks: #ffffff;
+  --navy-redup: #c8c4be;
+  --galat: #c92a2a;
+  --galat-latar: #fdecec;
+  --bahaya: #c92a2a;
+  --st-draf: #f0eeec;
+  --st-draf-teks: #37352f;
+  --st-menunggu: #e6e0f5;
+  --st-menunggu-teks: #391c57;
+  --st-setuju: #d9f3e1;
+  --st-setuju-teks: #1f6b33;
+  --st-perbaikan: #ffe8d4;
+  --st-perbaikan-teks: #793400;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --kanvas: #191918;
+    --permukaan: #222220;
+    --garis: #34332f;
+    --garis-kuat: #7a776f;
+    --tinta: #f1f0ee;
+    --arang: #e2e0dc;
+    --sekunder: #a8a59c;
+    --utama: #5f4fe0;
+    --utama-tekan: #4f3fd0;
+    --fokus: #a99cff;
+    --galat: #ff8a8a;
+    --galat-latar: #3a1d1d;
+    --st-draf: #2e2d2a;
+    --st-draf-teks: #e2e0dc;
+    --st-menunggu: #2d2550;
+    --st-menunggu-teks: #d6ccff;
+    --st-setuju: #183a24;
+    --st-setuju-teks: #9be3b1;
+    --st-perbaikan: #45260f;
+    --st-perbaikan-teks: #ffc799;
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --kanvas: #191918;
+  --permukaan: #222220;
+  --garis: #34332f;
+  --garis-kuat: #7a776f;
+  --tinta: #f1f0ee;
+  --arang: #e2e0dc;
+  --sekunder: #a8a59c;
+  --utama: #5f4fe0;
+  --utama-tekan: #4f3fd0;
+  --fokus: #a99cff;
+  --galat: #ff8a8a;
+  --galat-latar: #3a1d1d;
+  --st-draf: #2e2d2a;
+  --st-draf-teks: #e2e0dc;
+  --st-menunggu: #2d2550;
+  --st-menunggu-teks: #d6ccff;
+  --st-setuju: #183a24;
+  --st-setuju-teks: #9be3b1;
+  --st-perbaikan: #45260f;
+  --st-perbaikan-teks: #ffc799;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-kanvas text-tinta font-sans antialiased;
+    font-size: 16px;
+    line-height: 1.55;
+  }
+  :focus-visible {
+    outline: 2px solid var(--fokus);
+    outline-offset: 2px;
+  }
+  h1, h2, h3 {
+    @apply font-semibold text-tinta;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer components {
+  .tombol {
+    @apply inline-flex min-h-[44px] items-center justify-center gap-2 rounded-tombol px-[18px] text-sm font-medium transition-colors;
+  }
+  .tombol:disabled {
+    @apply cursor-not-allowed bg-garis text-sekunder border-transparent;
+  }
+  .tombol-utama {
+    @apply tombol bg-utama text-white;
+  }
+  .tombol-utama:not(:disabled):hover,
+  .tombol-utama:not(:disabled):active {
+    @apply bg-utama-tekan;
+  }
+  .tombol-kedua {
+    @apply tombol border border-garis-kuat text-tinta;
+  }
+  .tombol-kedua:not(:disabled):hover {
+    @apply bg-permukaan;
+  }
+  .tombol-bahaya {
+    @apply tombol text-white;
+    background: var(--bahaya);
+  }
+  .tombol-hantu {
+    @apply inline-flex min-h-[44px] items-center gap-2 rounded-chip px-3 text-sm font-medium text-tinta;
+  }
+  .tombol-hantu:hover {
+    @apply bg-permukaan;
+  }
+  .isian {
+    @apply block min-h-[44px] w-full rounded-tombol border border-garis-kuat bg-kanvas px-4 py-2 text-base text-tinta;
+  }
+  .isian[aria-invalid="true"] {
+    @apply border-2 border-galat;
+  }
+  .isian:disabled, .isian[readonly] {
+    @apply bg-permukaan text-sekunder;
+  }
+  .label {
+    @apply mb-1.5 block text-sm font-medium text-arang;
+  }
+  .kartu {
+    @apply rounded-kartu border border-garis bg-kanvas;
+  }
+  .tautan {
+    @apply font-medium text-tinta underline decoration-garis-kuat underline-offset-4;
+  }
+  .tautan:hover {
+    @apply decoration-tinta;
+  }
+  .teks-kecil {
+    @apply text-sm text-sekunder;
+  }
+}
