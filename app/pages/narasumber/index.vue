@@ -21,6 +21,8 @@ async function kirimVerifikasi() {
   }
 }
 
+const menungguPersetujuan = computed(() => data.value?.status_pendaftaran === 'menunggu')
+const siapIsi = computed(() => !!data.value?.akun.terverifikasi && !menungguPersetujuan.value)
 const belumIsi = computed(() => !!data.value && data.value.status_review === 'draf' && !data.value.profil.nama_lengkap)
 const lembar = computed(() => (data.value ? barisLembar(data.value.profil, data.value.akun.tipe, data.value.akun.email) : []))
 </script>
@@ -51,17 +53,22 @@ const lembar = computed(() => (data.value ? barisLembar(data.value.profil, data.
         <p v-if="pesanKirim" class="mt-2 font-medium text-galat">{{ pesanKirim }}</p>
       </Pesan>
 
+      <Pesan v-else-if="menungguPersetujuan" judul="Pendaftaran menunggu persetujuan admin" class="mb-6">
+        <p>Admin kegiatan LAN sedang memeriksa pendaftaran Anda. Anda akan menerima email di {{ data.akun.email }} setelah disetujui, lalu bisa mengisi data.</p>
+      </Pesan>
+
       <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div class="min-w-0">
           <h1 class="break-words text-3xl">{{ data.profil.nama_lengkap ?? 'Data narasumber Anda' }}</h1>
           <p class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-sekunder">
-            <StatusReview :status="data.status_review" />
+            <span v-if="menungguPersetujuan" class="font-medium text-arang">Menunggu persetujuan pendaftaran</span>
+            <StatusReview v-else :status="data.status_review" />
             <span>{{ data.akun.tipe === 'asn' ? 'ASN' : 'Bukan ASN' }}</span>
             <span v-if="data.unit_pengundang">Diundang oleh {{ data.unit_pengundang }}</span>
             <span>Diperbarui {{ formatWaktu(data.updated_at) }}</span>
           </p>
         </div>
-        <NuxtLink v-if="data.akun.terverifikasi" to="/narasumber/isi" class="tombol-utama shrink-0">
+        <NuxtLink v-if="siapIsi" to="/narasumber/isi" class="tombol-utama shrink-0">
           {{ data.status_review === 'draf' ? 'Lengkapi data' : 'Perbarui data' }}
         </NuxtLink>
       </div>
@@ -70,7 +77,7 @@ const lembar = computed(() => (data.value ? barisLembar(data.value.profil, data.
         <p class="whitespace-pre-line">{{ data.catatan_perbaikan }}</p>
       </Pesan>
 
-      <section v-if="belumIsi" class="mt-8 rounded-kartu border border-dashed border-garis-kuat p-6">
+      <section v-if="belumIsi && siapIsi" class="mt-8 rounded-kartu border border-dashed border-garis-kuat p-6">
         <h2 class="text-lg">Anda belum mengisi data</h2>
         <p class="mt-2 text-arang">
           Isi data diri, kepegawaian, kontak, dan rekening, lalu unggah NPWP, foto buku tabungan, dan CV.
@@ -78,7 +85,7 @@ const lembar = computed(() => (data.value ? barisLembar(data.value.profil, data.
         </p>
       </section>
 
-      <div v-else class="mt-8 space-y-6">
+      <div v-else-if="!belumIsi" class="mt-8 space-y-6">
         <LembarData v-for="b in lembar" :key="b.id" :judul="b.judul" :baris="b.baris" />
 
         <LembarData judul="Dokumen" :baris="barisDokumen(data.dokumen)">

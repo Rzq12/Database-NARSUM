@@ -2,18 +2,7 @@
 export default defineEventHandler(async (event) => {
   batasiPermintaan(event, 'daftar', 10, 60 * 60_000)
   const body = await bacaBody(event, skemaDaftar)
-
-  const terdaftar = await prisma.user.findFirst({
-    where: { OR: [{ email: body.email }, ...(body.no_hp ? [{ no_hp: body.no_hp }] : [])] },
-    select: { email: true },
-  })
-  if (terdaftar) {
-    const kolom = terdaftar.email === body.email ? 'email' : 'no_hp'
-    throw galat422(
-      { [kolom]: `${kolom === 'email' ? 'Email' : 'Nomor HP'} ini sudah terdaftar. Silakan masuk.` },
-      'Akun sudah ada. Silakan masuk dengan akun tersebut.',
-    )
-  }
+  await pastikanBelumTerdaftar(body.email, body.no_hp)
 
   const passwordHash = await buatHashPassword(body.password)
   const akun = await prisma.$transaction(async (tx) => {
@@ -42,12 +31,6 @@ export default defineEventHandler(async (event) => {
     })
   })
 
-  const emailTerkirim = await kirimVerifikasi(akun.id, akun.email)
-  await catatAudit(event, { pelaku: akun, aksi: 'daftar', objek: 'user', objekId: akun.id })
-  await setUserSession(event, {
-    user: { id: akun.id, role: 'narasumber', nama: akun.email, email: akun.email, tipe: akun.tipe },
-    aktifTerakhir: Date.now(),
-    versiSesi: akun.versi_sesi,
-  })
+  const emailTerkirim = await selesaikanPendaftaran(event, akun, 'daftar')
   return { ok: true, emailTerkirim }
 })

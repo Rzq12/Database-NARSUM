@@ -4,6 +4,7 @@ import { boleh, type Fitur, type Role } from '../shared/utils/akses'
 // Matriks harapan disalin dari SRS bagian 7. Setiap sel diuji untuk role yang boleh dan yang tidak.
 const MATRIKS: Record<Fitur, Role[]> = {
   buat_undangan: ['admin_unit', 'super_admin'],
+  setujui_pendaftaran: ['admin_unit', 'super_admin'],
   lihat_daftar: ['admin_unit', 'keuangan', 'inspektorat', 'super_admin'],
   buka_sensitif: ['admin_unit', 'keuangan', 'inspektorat', 'super_admin'],
   unduh_dokumen: ['admin_unit', 'keuangan', 'inspektorat', 'super_admin'],

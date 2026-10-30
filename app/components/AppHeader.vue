@@ -12,6 +12,7 @@ const tautan = computed(() => {
   return [
     { ke: '/admin', label: 'Narasumber', tampil: boleh(role, 'lihat_daftar') },
     { ke: '/admin/undangan', label: 'Undangan', tampil: boleh(role, 'buat_undangan') },
+    { ke: '/admin/pendaftaran', label: 'Pendaftaran', tampil: boleh(role, 'setujui_pendaftaran') },
     { ke: '/admin/log', label: 'Log audit', tampil: boleh(role, 'log_audit') },
     { ke: '/admin/pengguna', label: 'Pengguna & unit', tampil: boleh(role, 'kelola_pengguna') },
     { ke: '/akun', label: 'Akun' },

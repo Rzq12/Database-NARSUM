@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { cekKelengkapan, skemaDaftar, skemaProfil, skemaReview } from '../shared/utils/validasi'
+import { cekKelengkapan, skemaDaftar, skemaDaftarMandiri, skemaProfil, skemaReview, skemaTolakPendaftaran } from '../shared/utils/validasi'
 
 // Data palsu untuk pengujian, bukan data orang sungguhan.
 const lengkap = {
@@ -87,6 +87,24 @@ describe('skemaDaftar (FR-01)', () => {
 
   it('menyimpan email dalam huruf kecil', () => {
     expect(skemaDaftar.parse({ ...dasar, email: 'Uji@Contoh.TEST' }).email).toBe('uji@contoh.test')
+  })
+})
+
+describe('pendaftaran mandiri', () => {
+  const dasar = { tipe: 'non_asn', email: 'uji@contoh.test', password: '1234567890', setuju: true }
+
+  it('tidak memerlukan token undangan maupun unit', () => {
+    expect(skemaDaftarMandiri.safeParse(dasar).success).toBe(true)
+  })
+
+  it('membatasi keterangan 500 karakter dan menganggap kosong sebagai tidak diisi', () => {
+    expect(skemaDaftarMandiri.safeParse({ ...dasar, keterangan: 'a'.repeat(501) }).success).toBe(false)
+    expect(skemaDaftarMandiri.parse({ ...dasar, keterangan: '' }).keterangan).toBeNull()
+  })
+
+  it('mewajibkan alasan penolakan', () => {
+    expect(skemaTolakPendaftaran.safeParse({ alasan: '' }).success).toBe(false)
+    expect(skemaTolakPendaftaran.safeParse({ alasan: 'Bukan narasumber kegiatan LAN' }).success).toBe(true)
   })
 })
 

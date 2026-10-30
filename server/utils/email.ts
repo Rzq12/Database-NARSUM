@@ -65,6 +65,18 @@ export const templatEmail = {
     subjek: 'Data narasumber Anda perlu diperbaiki',
     teks: `Admin kegiatan meminta perbaikan data Anda dengan catatan:\n\n${catatan}\n\nPerbaiki data di ${urlAplikasi('/narasumber/isi')}.${PENUTUP}`,
   }),
+  pendaftaranMasuk: (email: string) => ({
+    subjek: 'Pendaftaran narasumber baru menunggu persetujuan',
+    teks: `${email} mendaftar sebagai narasumber tanpa undangan dan sudah memverifikasi emailnya.\n\nSetujui atau tolak di ${urlAplikasi('/admin/pendaftaran')}.${PENUTUP}`,
+  }),
+  pendaftaranDisetujui: () => ({
+    subjek: 'Pendaftaran narasumber Anda disetujui',
+    teks: `Pendaftaran Anda sebagai narasumber kegiatan LAN sudah disetujui. Silakan masuk dan lengkapi data Anda di ${urlAplikasi('/narasumber/isi')}.${PENUTUP}`,
+  }),
+  pendaftaranDitolak: (alasan: string) => ({
+    subjek: 'Pendaftaran narasumber Anda tidak disetujui',
+    teks: `Pendaftaran Anda sebagai narasumber kegiatan LAN tidak disetujui dengan alasan:\n\n${alasan}\n\nAkun yang Anda buat sudah dihapus. Bila Anda diundang oleh admin kegiatan, gunakan link undangan dari mereka.${PENUTUP}`,
+  }),
   dataMasuk: (nama: string, id: number) => ({
     subjek: `Data narasumber ${nama} siap direview`,
     teks: `${nama} menyimpan atau memperbarui datanya. Periksa di ${urlAplikasi(`/admin/narasumber/${id}`)}.${PENUTUP}`,

@@ -32,6 +32,17 @@ enum StatusReview {
   perlu_perbaikan
 }
 
+enum SumberPendaftaran {
+  undangan
+  mandiri
+}
+
+// Pendaftaran mandiri menunggu persetujuan admin; yang ditolak dihapus, jadi tidak ada status "ditolak".
+enum StatusPendaftaran {
+  menunggu
+  disetujui
+}
+
 enum JenisDokumen {
   npwp
   buku_tabungan
@@ -118,6 +129,9 @@ model Narasumber {
   no_rekening_enc       String?
   nama_pemilik_rekening String?
   status_review         StatusReview @default(draf)
+  sumber                SumberPendaftaran @default(undangan)
+  status_pendaftaran    StatusPendaftaran @default(disetujui)
+  keterangan_pendaftaran String?
   pernyataan_benar_at   DateTime?
   created_at            DateTime     @default(now())
   updated_at            DateTime     @updatedAt

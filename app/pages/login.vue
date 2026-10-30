@@ -41,7 +41,10 @@ async function masuk() {
       <dl class="mt-8 border-t border-garis">
         <div class="grid gap-1 border-b border-garis py-4 sm:grid-cols-[10rem_1fr]">
           <dt class="font-medium">Narasumber baru</dt>
-          <dd class="text-arang">Buka link undangan dari admin kegiatan yang mengundang Anda. Pendaftaran hanya bisa lewat link itu.</dd>
+          <dd class="text-arang">
+            Buka link undangan dari admin kegiatan yang mengundang Anda. Belum menerima undangan?
+            <NuxtLink to="/daftar" class="tautan">Ajukan pendaftaran narasumber</NuxtLink>; pendaftaran ini perlu disetujui admin.
+          </dd>
         </div>
         <div class="grid gap-1 border-b border-garis py-4 sm:grid-cols-[10rem_1fr]">
           <dt class="font-medium">Sudah terdaftar</dt>
@@ -73,9 +76,10 @@ async function masuk() {
           {{ mengirim ? 'Memeriksa…' : 'Masuk' }}
         </button>
       </form>
-      <p class="mt-4 text-sm">
+      <div class="mt-4 flex flex-wrap justify-between gap-x-4 gap-y-2 text-sm">
         <NuxtLink to="/lupa-password" class="tautan">Lupa password?</NuxtLink>
-      </p>
+        <NuxtLink to="/daftar" class="tautan">Ajukan pendaftaran narasumber</NuxtLink>
+      </div>
     </section>
   </div>
 </template>

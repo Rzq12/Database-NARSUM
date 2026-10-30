@@ -125,6 +125,9 @@ async function simpan(final: boolean) {
       <Pesan v-if="!data.akun.terverifikasi" jenis="galat" class="mt-6">
         Verifikasi email Anda dulu sebelum mengisi data. <NuxtLink to="/verifikasi" class="tautan">Kirim ulang link verifikasi</NuxtLink>
       </Pesan>
+      <Pesan v-else-if="data.status_pendaftaran === 'menunggu'" class="mt-6">
+        Pendaftaran Anda masih menunggu persetujuan admin. Formulir bisa diisi setelah disetujui; Anda akan menerima email.
+      </Pesan>
       <Pesan v-if="data.catatan_perbaikan" judul="Catatan perbaikan dari admin" class="mt-6">
         <p class="whitespace-pre-line">{{ data.catatan_perbaikan }}</p>
       </Pesan>
@@ -145,7 +148,7 @@ async function simpan(final: boolean) {
         </nav>
 
         <form novalidate @submit.prevent="simpan(true)">
-          <fieldset :disabled="!data.akun.terverifikasi" class="min-w-0 space-y-10">
+          <fieldset :disabled="!data.akun.terverifikasi || data.status_pendaftaran === 'menunggu'" class="min-w-0 space-y-10">
             <section v-for="b in BAGIAN" :id="b.id" :key="b.id" class="scroll-mt-6" :aria-labelledby="`judul-${b.id}`">
               <h2 :id="`judul-${b.id}`" class="border-b border-garis pb-2 text-xl">{{ b.judul }}</h2>
               <p v-if="b.id === 'kepegawaian' && tipe === 'asn'" class="mt-2 teks-kecil">NIP, pangkat/golongan, dan eselon wajib untuk ASN.</p>

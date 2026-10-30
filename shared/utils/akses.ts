@@ -7,6 +7,7 @@ export const ROLE_STAF: Role[] = ['admin_unit', 'keuangan', 'inspektorat', 'supe
 
 export const AKSES = {
   buat_undangan: ['admin_unit', 'super_admin'],
+  setujui_pendaftaran: ['admin_unit', 'super_admin'],
   lihat_daftar: ['admin_unit', 'keuangan', 'inspektorat', 'super_admin'],
   buka_sensitif: ['admin_unit', 'keuangan', 'inspektorat', 'super_admin'],
   unduh_dokumen: ['admin_unit', 'keuangan', 'inspektorat', 'super_admin'],

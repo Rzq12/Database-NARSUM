@@ -115,13 +115,30 @@ export const skemaLogin = z.object({
   password: z.string().min(1, 'Isi password'),
 })
 
-export const skemaDaftar = z.object({
-  token: z.string().min(1),
-  tipe: z.enum(['asn', 'non_asn']),
+const skemaAkunNarasumber = z.object({
+  tipe: z.enum(['asn', 'non_asn'], 'Pilih status kepegawaian'),
   email: skemaEmail,
   no_hp: opsional(skemaHp),
   password: skemaPassword,
   setuju: z.literal(true, 'Centang persetujuan pemrosesan data pribadi untuk melanjutkan'),
+})
+
+// Pendaftaran lewat link undangan (FR-01).
+export const skemaDaftar = skemaAkunNarasumber.extend({
+  token: z.string().min(1),
+})
+
+// Pendaftaran mandiri tanpa undangan; perlu persetujuan Admin Unit atau Super Admin.
+export const skemaDaftarMandiri = skemaAkunNarasumber.extend({
+  keterangan: opsional(teks(500)),
+})
+
+export const skemaSetujuiPendaftaran = z.object({
+  unit_id: z.coerce.number().int().positive('Pilih unit yang menjadi pengundang'),
+})
+
+export const skemaTolakPendaftaran = z.object({
+  alasan: teks(1000).min(5, 'Tulis alasan penolakan untuk pendaftar'),
 })
 
 export const skemaUndangan = z.object({

@@ -1,9 +1,6 @@
 // FR-15, FR-16: unggah atau ganti dokumen. Dokumen lama diganti oleh yang baru.
 export default defineEventHandler(async (event) => {
-  const akun = await requireRole(event, 'narasumber')
-  if (!akun.email_verified_at) {
-    throw createError({ statusCode: 403, message: 'Verifikasi email Anda dulu sebelum mengunggah dokumen.' })
-  }
+  const akun = await requireNarasumberSiapIsi(event)
   const jenis = jenisDariParam(event)
   const bagian = (await readMultipartFormData(event))?.find(b => b.name === 'berkas' && b.filename)
   if (!bagian) throw createError({ statusCode: 422, message: 'Pilih file yang akan diunggah.' })

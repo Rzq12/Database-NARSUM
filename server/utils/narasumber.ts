@@ -1,17 +1,20 @@
+import type { H3Event } from 'h3'
 import type { Prisma, Narasumber } from '../generated/prisma/client'
 import type { Akun } from './auth'
 
 // FR-21: Admin Unit melihat semua narasumber undangan unitnya, ditambah yang sudah disetujui dari unit lain.
 // Keuangan hanya yang disetujui. Inspektorat dan Super Admin melihat semua.
+// Pendaftaran mandiri yang belum disetujui tidak tampil di daftar narasumber; tempatnya di menu Pendaftaran.
 export function whereTerlihat(akun: Akun): Prisma.NarasumberWhereInput {
+  const disetujui: Prisma.NarasumberWhereInput = { status_pendaftaran: 'disetujui' }
   switch (akun.role) {
     case 'super_admin':
     case 'inspektorat':
-      return {}
+      return disetujui
     case 'keuangan':
-      return { status_review: 'disetujui' }
+      return { ...disetujui, status_review: 'disetujui' }
     case 'admin_unit':
-      return { OR: [{ unit_pengundang_id: { in: unitIds(akun) } }, { status_review: 'disetujui' }] }
+      return { ...disetujui, OR: [{ unit_pengundang_id: { in: unitIds(akun) } }, { status_review: 'disetujui' }] }
     default:
       return { id: -1 }
   }
@@ -29,6 +32,19 @@ export async function cariNarasumberTerlihat(akun: Akun, id: number) {
   })
   if (!ns) throw createError({ statusCode: 404, message: 'Data narasumber tidak ditemukan atau di luar kewenangan Anda.' })
   return ns
+}
+
+// Narasumber baru boleh mengisi data setelah email terverifikasi dan, untuk pendaftaran mandiri, disetujui admin.
+export async function requireNarasumberSiapIsi(event: H3Event) {
+  const akun = await requireRole(event, 'narasumber')
+  if (!akun.email_verified_at) {
+    throw createError({ statusCode: 403, message: 'Verifikasi email Anda dulu sebelum mengisi data.' })
+  }
+  const ns = await prisma.narasumber.findUniqueOrThrow({ where: { user_id: akun.id }, select: { status_pendaftaran: true } })
+  if (ns.status_pendaftaran !== 'disetujui') {
+    throw createError({ statusCode: 403, message: 'Pendaftaran Anda masih menunggu persetujuan admin. Anda akan menerima email setelah disetujui.' })
+  }
+  return akun
 }
 
 // Admin Unit hanya mereview narasumber yang diundang unitnya.

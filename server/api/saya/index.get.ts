@@ -20,6 +20,7 @@ export default defineEventHandler(async (event) => {
     profil: profilDariDb(ns, 'penuh'),
     dokumen: ringkasDokumen(ns.dokumen),
     status_review: ns.status_review,
+    status_pendaftaran: ns.status_pendaftaran,
     pernyataan_benar_at: ns.pernyataan_benar_at,
     updated_at: ns.updated_at,
     unit_pengundang: ns.unit_pengundang?.nama ?? null,

@@ -8,11 +8,15 @@ const keadaan = ref<'menunggu' | 'memverifikasi' | 'berhasil' | 'gagal'>(token ?
 const pesan = ref('')
 const kirim = ref<'diam' | 'mengirim' | 'terkirim'>('diam')
 const pesanKirim = ref('')
+// Pendaftaran mandiri masih perlu persetujuan admin setelah email terverifikasi.
+const menungguPersetujuan = ref(false)
+const mandiri = computed(() => !!route.query.mandiri)
 
 onMounted(async () => {
   if (!token) return
   try {
-    await $fetch('/api/auth/verifikasi', { method: 'POST', body: { token } })
+    const hasil = await $fetch<{ menungguPersetujuan: boolean }>('/api/auth/verifikasi' as string, { method: 'POST', body: { token } })
+    menungguPersetujuan.value = hasil.menungguPersetujuan
     keadaan.value = 'berhasil'
   }
   catch (e) {
@@ -45,6 +49,17 @@ async function kirimUlang() {
       <p class="mt-3 text-arang" role="status">Tunggu sebentar.</p>
     </template>
 
+    <template v-else-if="keadaan === 'berhasil' && menungguPersetujuan">
+      <h1 class="text-2xl">Email terverifikasi</h1>
+      <p class="mt-3 text-arang">
+        Pendaftaran Anda sekarang menunggu persetujuan admin kegiatan LAN. Anda akan menerima email setelah
+        pendaftaran disetujui, lalu bisa mengisi data narasumber.
+      </p>
+      <NuxtLink :to="loggedIn ? '/narasumber' : '/login?ke=/narasumber'" class="tombol-kedua mt-6">
+        {{ loggedIn ? 'Ke halaman data saya' : 'Masuk' }}
+      </NuxtLink>
+    </template>
+
     <template v-else-if="keadaan === 'berhasil'">
       <h1 class="text-2xl">Email terverifikasi</h1>
       <p class="mt-3 text-arang">Sekarang Anda bisa mengisi data narasumber dan mengunggah dokumen.</p>
@@ -72,7 +87,8 @@ async function kirimUlang() {
       </Pesan>
       <p class="mt-3 text-arang">
         Kami mengirim link verifikasi ke <strong class="font-semibold text-tinta">{{ user?.email ?? 'email Anda' }}</strong>.
-        Buka link itu untuk mulai mengisi data. Link berlaku 24 jam.
+        <template v-if="mandiri">Buka link itu, lalu pendaftaran Anda diteruskan ke admin untuk disetujui. Link berlaku 24 jam.</template>
+        <template v-else>Buka link itu untuk mulai mengisi data. Link berlaku 24 jam.</template>
       </p>
       <p class="mt-3 text-arang">Tidak menerima email? Periksa folder spam, atau kirim ulang. Kirim ulang dibatasi 3 kali per jam.</p>
       <div class="mt-6 flex flex-wrap gap-3">
