@@ -1,5 +1,6 @@
 // Dipakai halaman /daftar/[token] untuk menampilkan status link sebelum narasumber mengisi apa pun.
 export default defineEventHandler(async (event) => {
+  batasiPermintaan(event, 'cek-undangan', 60, 15 * 60_000)
   const token = getRouterParam(event, 'token') ?? ''
   const undangan = await prisma.undangan.findUnique({
     where: { token_hash: hashToken(token) },

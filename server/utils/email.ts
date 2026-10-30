@@ -1,9 +1,11 @@
 import nodemailer from 'nodemailer'
 
-// Tanpa NUXT_SMTP_HOST (pengembangan), email dicetak ke konsol server.
+// Tanpa NUXT_SMTP_HOST, email hanya dicetak ke konsol di mode pengembangan.
+// Di produksi itu ditolak, karena link verifikasi dan reset password akan bocor ke log server.
 export async function kirimEmail(ke: string, subjek: string, teks: string) {
   const c = useRuntimeConfig()
   if (!c.smtpHost) {
+    if (!import.meta.dev) throw new Error('NUXT_SMTP_HOST belum diatur; email tidak dikirim')
     console.info(`\n[EMAIL] Ke: ${ke}\nSubjek: ${subjek}\n\n${teks}\n`)
     return
   }

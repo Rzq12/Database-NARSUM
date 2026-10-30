@@ -2,13 +2,14 @@ import type { H3Event } from 'h3'
 import { hash, verify } from '@node-rs/argon2'
 
 // Role selalu dibaca ulang dari basis data, jadi perubahan role atau penonaktifan berlaku seketika.
+// versi_sesi membatalkan cookie lama setelah logout atau ganti password.
 export async function requireLogin(event: H3Event) {
-  const { user } = await requireUserSession(event, { message: 'Sesi berakhir. Silakan masuk lagi.' })
+  const sesi = await requireUserSession(event, { message: 'Sesi berakhir. Silakan masuk lagi.' })
   const akun = await prisma.user.findUnique({
-    where: { id: user.id },
+    where: { id: sesi.user.id },
     include: { units: { include: { unit: true } } },
   })
-  if (!akun || akun.status !== 'aktif') {
+  if (!akun || akun.status !== 'aktif' || akun.versi_sesi !== sesi.versiSesi) {
     await clearUserSession(event)
     throw createError({ statusCode: 401, message: 'Sesi berakhir. Silakan masuk lagi.' })
   }
@@ -40,4 +41,17 @@ export function buatHashPassword(password: string) {
 
 export function cocokPassword(hashTersimpan: string, password: string) {
   return verify(hashTersimpan, password)
+}
+
+// Dipanggil saat email tidak terdaftar, supaya waktu respons sama dengan akun yang ada
+// dan email terdaftar tidak bisa ditebak dari lamanya jawaban.
+let hashTiruan: Promise<string> | undefined
+export async function verifikasiTiruan(password: string) {
+  hashTiruan ??= buatHashPassword(`tiruan-${Math.random()}`)
+  await verify(await hashTiruan, password)
+}
+
+export async function naikkanVersiSesi(userId: number) {
+  const akun = await prisma.user.update({ where: { id: userId }, data: { versi_sesi: { increment: 1 } } })
+  return akun.versi_sesi
 }

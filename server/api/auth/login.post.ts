@@ -3,6 +3,7 @@ const BATAS_GAGAL = 5
 const KUNCI_MENIT = 15
 
 export default defineEventHandler(async (event) => {
+  batasiPermintaan(event, 'login', 10, 5 * 60_000)
   const { identitas, password } = await bacaBody(event, skemaLogin)
   const hp = identitas.replace(/[\s-]/g, '')
   const akun = await prisma.user.findFirst({
@@ -12,15 +13,13 @@ export default defineEventHandler(async (event) => {
   const salah = createError({ statusCode: 401, message: 'Email/nomor HP atau password salah.' })
 
   if (!akun || !akun.password_hash) {
+    await verifikasiTiruan(password)
     await catatAudit(event, { aksi: 'login_gagal', keterangan: 'akun tidak ditemukan' })
     throw salah
   }
   if (akun.terkunci_sampai && akun.terkunci_sampai > new Date()) {
     const jam = akun.terkunci_sampai.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
     throw createError({ statusCode: 423, message: `Akun terkunci sementara karena ${BATAS_GAGAL} kali gagal masuk. Coba lagi setelah pukul ${jam}.` })
-  }
-  if (akun.status !== 'aktif') {
-    throw createError({ statusCode: 403, message: 'Akun ini dinonaktifkan. Hubungi Super Admin.' })
   }
 
   if (!(await cocokPassword(akun.password_hash, password))) {
@@ -35,6 +34,11 @@ export default defineEventHandler(async (event) => {
     throw salah
   }
 
+  // Status dicek setelah password benar, supaya status akun tidak terbaca oleh orang yang tidak tahu password.
+  if (akun.status !== 'aktif') {
+    throw createError({ statusCode: 403, message: 'Akun ini dinonaktifkan. Hubungi Super Admin.' })
+  }
+
   await prisma.user.update({ where: { id: akun.id }, data: { gagal_login: 0, terkunci_sampai: null } })
   await setUserSession(event, {
     user: {
@@ -45,6 +49,7 @@ export default defineEventHandler(async (event) => {
       tipe: akun.tipe,
     },
     aktifTerakhir: Date.now(),
+    versiSesi: akun.versi_sesi,
   })
   await catatAudit(event, { pelaku: akun, aksi: 'login' })
   return { beranda: berandaRole(akun.role) }

@@ -60,6 +60,8 @@ model User {
   status            StatusAkun      @default(aktif)
   gagal_login       Int             @default(0)
   terkunci_sampai   DateTime?
+  // Dinaikkan saat logout, ganti password, atau ubah role/status: semua cookie sesi lama jadi tidak berlaku.
+  versi_sesi        Int             @default(0)
   created_at        DateTime        @default(now())
 
   units      UserUnit[]

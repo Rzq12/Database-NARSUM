@@ -14,7 +14,7 @@ const skemaEkspor = z.object({
 
 // Mencegah sel CSV/XLSX dibaca sebagai rumus saat dibuka di spreadsheet.
 function amankanSel(v: string) {
-  return /^[=+\-@]/.test(v) ? `'${v}` : v
+  return /^[=+\-@\t\r]/.test(v) ? `'${v}` : v
 }
 
 // FR-24: ekspor narasumber terpilih dengan pilihan kolom. Setiap ekspor tercatat dengan jumlah baris.

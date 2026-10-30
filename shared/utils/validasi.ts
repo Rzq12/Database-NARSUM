@@ -1,5 +1,8 @@
 import { z } from 'zod'
 
+// CSP aplikasi melarang eval; tanpa ini Zod mencoba new Function() untuk mendeteksi JIT.
+z.config({ jitless: true })
+
 // Aturan validasi FRS FR-11. Dipakai bersama oleh form (tambahan) dan server (wajib).
 
 export const AGAMA = ['Islam', 'Kristen', 'Katolik', 'Hindu', 'Buddha', 'Konghucu'] as const

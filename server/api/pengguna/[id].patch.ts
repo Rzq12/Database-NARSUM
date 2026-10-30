@@ -14,7 +14,12 @@ export default defineEventHandler(async (event) => {
   }
 
   await prisma.$transaction(async (tx) => {
-    await tx.user.update({ where: { id }, data: { nama: body.nama, role: body.role, status: body.status } })
+    // Perubahan role atau status mengakhiri sesi pengguna tersebut agar hak aksesnya dimuat ulang.
+    const cabutSesi = (body.role && body.role !== target.role) || (body.status && body.status !== target.status)
+    await tx.user.update({
+      where: { id },
+      data: { nama: body.nama, role: body.role, status: body.status, ...(cabutSesi ? { versi_sesi: { increment: 1 } } : {}) },
+    })
     if (body.unit_ids || role !== 'admin_unit') {
       await tx.userUnit.deleteMany({ where: { user_id: id } })
       if (role === 'admin_unit' && body.unit_ids) {

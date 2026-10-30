@@ -112,9 +112,15 @@ async function daftar() {
 
         <div v-if="form.tipe" class="space-y-4">
           <Pesan v-if="pesan" jenis="galat">{{ pesan }}</Pesan>
-          <KolomIsian id="email" label="Email" wajib :galat="galat.email" petunjuk="Link verifikasi dikirim ke email ini.">
+          <KolomIsian
+            id="email"
+            label="Email"
+            wajib
+            :galat="galat.email"
+            :petunjuk="undangan.email_tujuan ? 'Undangan ini ditujukan ke email tersebut. Link verifikasi dikirim ke sana.' : 'Link verifikasi dikirim ke email ini.'"
+          >
             <template #default="{ id, invalid, describedby }">
-              <input :id="id" v-model="form.email" class="isian" type="email" autocomplete="email" :aria-invalid="invalid" :aria-describedby="describedby">
+              <input :id="id" v-model="form.email" class="isian" type="email" autocomplete="email" :readonly="!!undangan.email_tujuan" :aria-invalid="invalid" :aria-describedby="describedby">
             </template>
           </KolomIsian>
           <KolomIsian id="no_hp" label="Nomor HP" :galat="galat.no_hp" petunjuk="Opsional. Bisa dipakai untuk masuk selain email. Diawali 08 atau +62.">

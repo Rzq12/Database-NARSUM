@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 export default defineEventHandler(async (event) => {
+  batasiPermintaan(event, 'verifikasi', 20, 15 * 60_000)
   const { token } = await bacaBody(event, z.object({ token: z.string().min(1) }))
   const data = await pakaiTokenAkun(token, 'verifikasi')
   const akun = await prisma.user.update({

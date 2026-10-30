@@ -32,6 +32,7 @@ export async function simpanDokumen(narasumberId: number, jenis: JenisDokumen, i
   if (!terdeteksi || !mime) {
     throw createError({ statusCode: 422, message: `Format file harus ${aturan.keterangan}.` })
   }
+  await pindaiVirus(isi)
   const ext = terdeteksi.ext === 'cfb' ? 'doc' : terdeteksi.ext
   const relatif = join(String(narasumberId), `${jenis}-${randomBytes(8).toString('hex')}.${ext}`)
   await mkdir(join(folderDasar(), String(narasumberId)), { recursive: true })
@@ -54,7 +55,10 @@ export async function hapusFolderNarasumber(narasumberId: number) {
 export async function kirimDokumen(event: Parameters<typeof setResponseHeader>[0], dok: { path: string, mime: string, nama_asli: string }) {
   const isi = await bacaDokumen(dok.path)
   setResponseHeader(event, 'Content-Type', dok.mime)
-  setResponseHeader(event, 'Content-Disposition', `inline; filename="${encodeURIComponent(dok.nama_asli)}"`)
+  // PDF dan gambar boleh dibuka di browser. DOC/DOCX selalu diunduh, tidak dibuka otomatis,
+  // karena bisa membawa makro.
+  const tampil = ['application/pdf', 'image/jpeg', 'image/png'].includes(dok.mime) ? 'inline' : 'attachment'
+  setResponseHeader(event, 'Content-Disposition', `${tampil}; filename*=UTF-8''${encodeURIComponent(dok.nama_asli)}`)
   setResponseHeader(event, 'Cache-Control', 'private, no-store')
   setResponseHeader(event, 'X-Content-Type-Options', 'nosniff')
   return isi

@@ -9,6 +9,7 @@ declare module '#auth-utils' {
 
   interface UserSession {
     aktifTerakhir?: number
+    versiSesi?: number
   }
 }
 

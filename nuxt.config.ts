@@ -31,9 +31,13 @@ export default defineNuxtConfig({
     smtpPass: '',
     smtpFrom: '',
     folderDokumen: '.data/dokumen',
+    percayaProxy: false,
+    clamavHost: '',
+    clamavPort: '3310',
     session: {
       // Batas mutlak cookie. Batas tidak aktif per role ada di server/middleware/sesi.ts.
       maxAge: 60 * 60 * 8,
+      password: '', // diisi dari NUXT_SESSION_PASSWORD
     },
     public: {
       urlAplikasi: 'http://localhost:3000',

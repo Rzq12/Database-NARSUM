@@ -22,7 +22,7 @@ export async function catatAudit(event: H3Event, entri: {
       objek: entri.objek ?? null,
       objek_id: entri.objekId?.toString() ?? null,
       keterangan: entri.keterangan ?? null,
-      ip: getRequestIP(event, { xForwardedFor: true }) ?? null,
+      ip: ipKlien(event),
     },
   })
 }
